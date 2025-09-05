@@ -54,3 +54,7 @@ FOREIGN KEY (course_id) REFERENCES courses(id);
 ALTER TABLE courses
 ADD CONSTRAINT fk_courses_doctor_id
 FOREIGN KEY (doctor_id) REFERENCES doctors(id);
+
+ALTER TABLE student_enrollment
+ADD CONSTRAINT pk_student_enrollment
+PRIMARY KEY (student_id, course_id);
