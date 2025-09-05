@@ -37,23 +37,28 @@ CREATE TABLE doctors
 
 ALTER TABLE student_enrollment
 ADD CONSTRAINT fk_student_id
-FOREIGN KEY (student_id) REFERENCES students(id);
+FOREIGN KEY (student_id) REFERENCES students(id)
+ON DELETE CASCADE;
 
 ALTER TABLE student_enrollment
 ADD CONSTRAINT fk_course_id
-FOREIGN KEY (course_id) REFERENCES courses(id);
+FOREIGN KEY (course_id) REFERENCES courses(id)
+ON DELETE CASCADE;
 
 ALTER TABLE payments
 ADD CONSTRAINT fk_payment_student_id
-FOREIGN KEY (student_id) REFERENCES students(id);
+FOREIGN KEY (student_id) REFERENCES students(id)
+ON DELETE CASCADE;
 
 ALTER TABLE payments
 ADD CONSTRAINT fk_payment_course_id
-FOREIGN KEY (course_id) REFERENCES courses(id);
+FOREIGN KEY (course_id) REFERENCES courses(id)
+ON DELETE CASCADE;
 
 ALTER TABLE courses
 ADD CONSTRAINT fk_courses_doctor_id
-FOREIGN KEY (doctor_id) REFERENCES doctors(id);
+FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+ON DELETE CASCADE;
 
 ALTER TABLE student_enrollment
 ADD CONSTRAINT pk_student_enrollment
