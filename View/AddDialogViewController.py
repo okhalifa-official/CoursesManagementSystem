@@ -16,12 +16,14 @@ class AddDialog(tk.Toplevel):
         self.title(f"Add to {table_name}")
         self.table = table_name
 
-        fields = DataModel.model['table_name']
+        fields = DataModel.model[table_name]
         self.fields = fields
         self.refresh_callback = refresh_callback
         self.entries = {}
 
-        table_fk_list = DataModel.foreign_keys[self.table]
+        table_fk_list = []
+        if self.table in DataModel.foreign_keys:
+            table_fk_list = DataModel.foreign_keys[self.table]
         for i, f in enumerate(fields):
             tk.Label(self, text=f).grid(row=i, column=0, padx=5, pady=5, sticky="e")
             
@@ -32,7 +34,7 @@ class AddDialog(tk.Toplevel):
                     isRelation = True
                     
                     # load records in combobox
-                    table_realtion = [{fk_obj[1], ''}]
+                    table_realtion = [(fk_obj[1], '')]
                     db_res = select(database, table_realtion)
                     records = db_res.fetchall()
 
@@ -57,9 +59,15 @@ class AddDialog(tk.Toplevel):
         values = []
         for f in self.fields:
             val = self.entries[f].get()
-            if f == "course_id" and val:
-                val = val.split(" - ")[0]  # Extract course ID
-            values.append(val)
+            table_fk_list = []
+            if self.table in DataModel.foreign_keys:
+                table_fk_list = DataModel.foreign_keys[self.table]
+            for fk_obj in table_fk_list:
+                if f == fk_obj[0] and val:
+                    val = val.split(" - ")[0]  # Extract course ID
+                    break
+            if val != '':
+                values.append(val)
 
         if len(values) != len(self.fields):  # not all feilds are filled
             print("Warning", " All fields must be filled")

@@ -8,9 +8,9 @@ model = {
 
 # {Table_name: [{fk, to_table, pk},{..,..,..}]}
 foreign_keys = {
-    'Courses': [{'doctor_id','Doctors','id'}],
-    'Student_enrollment': [{'student_id', 'Students', 'id'}, {'courses_id', 'Courses', 'id'}],
-    'Payments': [{'student_id', 'Students', 'id'}, {'courses_id', 'Courses', 'id'}]
+    'Courses': [('doctor_id','Doctors','id')],
+    'Student_Enrollment': [('student_id', 'Students', 'id'), ('course_id', 'Courses', 'id')],
+    'Payments': [('student_id', 'Students', 'id'), ('course_id', 'Courses', 'id')]
 }
 
 # nullable_fields = {

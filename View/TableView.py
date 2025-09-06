@@ -4,9 +4,10 @@ import os, sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Controller'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model'))
-from Model import DataModel
+from Model import DataModel,DB
 from Controller import DataController
 from View import AddDialogViewController as AddDialog
+from Model.Query import delete
 
 # ------------------ Main App ------------------
 class CoursesApp(tk.Tk):
@@ -76,10 +77,21 @@ class CoursesApp(tk.Tk):
         rows = DataController.load_data(table)
         if rows:
             # Clear table before fetching results
-            self.clear_table(self, table)
+            self.clear_table(table)
             # Fetch results to the table view
             for r in rows:
-                self.tree.insert("", "end", values=r)
+                self.tables[table].insert("", "end", values=r)
 
     def add_item(self, table, fields):
         AddDialog.AddDialog(self, table, lambda: self.load_data(table))
+    
+    def delete_selected(self, table):
+        tree = self.tables[table]
+        selected = tree.selection()
+        if not selected:
+            print("Warning", " No row selected")
+            #messagebox.showwarning("Warning", "No row selected")
+            return
+        record_id = tree.item(selected[0])["values"][0]
+        delete.delete(DB.db(), table, [record_id])
+        self.load_data(table)

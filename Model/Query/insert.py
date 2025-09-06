@@ -5,4 +5,5 @@ def insert(database, table, values):
         placeholders = ",".join("?" for _ in columns)
         query = f"INSERT INTO {table_name} ({','.join(columns)}) VALUES ({placeholders})"
 
-        database.execute(query, values)
+        database.cursor().execute(query, values)
+        database.commit()

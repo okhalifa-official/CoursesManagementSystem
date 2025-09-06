@@ -22,11 +22,11 @@ class db:
 
     def fetchall(self):
         try:
-            cursor = self.cursor()
-            return cursor.fetchall()
+            return self._cursor.fetchall()
         except Exception as error:
             print(f"Failed to fetch all rows: {error}")
             return None
+
     _instance = None
 
     def __new__(cls, *args, **kwargs):

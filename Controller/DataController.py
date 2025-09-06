@@ -11,10 +11,10 @@ database = db()
 def load_data(table_name):
     tables_relations = [(table_name, '')]
     try:
-        select.select(database, tables_relations)
+        cursor = select.select(database, tables_relations)
     except Exception as error:
         print(f"Failed loading data: {error}")
         return None
     
-    rows = database.fetchall()
+    rows = cursor.fetchall()
     return rows
