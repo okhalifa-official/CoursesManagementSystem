@@ -12,7 +12,6 @@ BEGIN
     SET course_id = 1
     WHERE student_id = 3 AND course_id = 2;
 END;
-/
 
 UPDATE courses
 SET name = 'Histology of Kidney'
