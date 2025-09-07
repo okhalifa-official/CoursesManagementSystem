@@ -1,5 +1,5 @@
 model = {
-    'Students': ['id', 'name'],
+    'Students': ['id','Student', 'Course', 'Doctor', 'Payment ID'],
     'Courses': ['id', 'name', 'doctor_id'],
     'Doctors': ['id', 'name'],
     'Student_Enrollment': ['id', 'student_id', 'course_id'],

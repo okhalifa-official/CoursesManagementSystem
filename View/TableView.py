@@ -83,7 +83,7 @@ class CoursesApp(tk.Tk):
                 self.tables[table].insert("", "end", values=r)
 
     def add_item(self, table, fields):
-        AddDialog.AddDialog(self, table, lambda: self.load_data(table))
+        AddDialog.AddDialog(self, table, lambda: self.load_all_data())
     
     def delete_selected(self, table):
         tree = self.tables[table]
@@ -94,4 +94,7 @@ class CoursesApp(tk.Tk):
             return
         record_id = tree.item(selected[0])["values"][0]
         delete.delete(DB.db(), table, [record_id])
-        self.load_data(table)
+        self.reload()
+
+    def reload(self):
+        self.load_all_data()
