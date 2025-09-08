@@ -1,3 +1,9 @@
+Students = 'Students'
+Courses = 'Courses'
+Doctors = 'Doctors'
+Student_Enrollment = 'Student_Enrollment'
+Payments = 'Payments'
+
 model = {
     'Students': ['id','Student', 'Course', 'Doctor', 'Payment ID'],
     'Courses': ['id', 'name', 'doctor_id'],
