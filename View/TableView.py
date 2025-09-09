@@ -4,10 +4,12 @@ import os, sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Controller'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model'))
-from Model import DataModel,DB,TableJoin
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Router'))
+from Model import DataModel,DB
 from Controller import DataController
 from View import AddDialogViewController as AddDialog
 from Model.Query import delete
+from Router import route as _
 
 # ------------------ Main App ------------------
 class CoursesApp(tk.Tk):
@@ -23,15 +25,11 @@ class CoursesApp(tk.Tk):
 
         # Tables Definitions
         self.tables = {}
-        self.join_frame = {}
+        self.action_btns_frame = {}
         
         # import definition object from Model
         self.table_definitions = DataModel.model
-
-        self.join_graph = TableJoin.Graph()
-        self.current_node = list(self.table_definitions.keys())[0]
-        self.join_graph.visited[self.current_node] = []
-        self.join_graph.visited[self.current_node].append(self.current_node)
+        
 
         for table_name, col_name in self.table_definitions.items():
             # Add a tab for each table
@@ -44,15 +42,27 @@ class CoursesApp(tk.Tk):
             
             # if table_name not in self.join_frame:
             #     self.join_frame[table_name] = 
-            self.join_frame[table_name] = ttk.Frame(filter_frame)
-            self.join_frame[table_name].pack(side="left", fill="x", expand=True, padx=5)
+            self.action_btns_frame[table_name] = ttk.Frame(filter_frame)
+            self.action_btns_frame[table_name].pack(side="left", fill="x", expand=True, padx=5)
 
-            # Add Join Tables
+            # Add Action Buttons
             current = table_name
-            for nei in self.join_graph.g[current]:
-                join_table_btn = ttk.Button(self.join_frame[current], text=f"Join {nei}")
-                join_table_btn.config(command=lambda t=table_name, n=nei, btn=join_table_btn: self.join_table(t, n, btn))
-                join_table_btn.pack(side="left", padx=5)
+            create_btn = ttk.Button(self.action_btns_frame[current],
+                                    text=f"Create New {current}",
+                                    command=lambda t=current: self.create_btn_pressed(t))
+            create_btn.pack(side="left", padx=5)
+
+            edit_btn = ttk.Button(self.action_btns_frame[current],
+                                    text=f"Edit {current}",
+                                    command=lambda t=current: self.edit_btn_pressed(t))
+            edit_btn.pack(side="left", padx=5)
+
+            payment_btn = ttk.Button(self.action_btns_frame[current],
+                                    text=f"Add Payment",
+                                    command=lambda t=current: self.payment_btn_pressed(t))
+            payment_btn.pack(side="left", padx=5)
+
+            
 
             # Add search bar
             search_var = tk.StringVar()
@@ -150,28 +160,19 @@ class CoursesApp(tk.Tk):
             if any(query.lower() in str(cell).lower() for cell in r):
                 self.tables[table_name].insert("", "end", values=r)
     
-    def join_table(self, table_name, merge_with, btn):
-        # Remove pressed join button
-        btn.destroy()
+    def create_btn_pressed(self, table_name):
+        print("create")
+        _.route(table_name, to="create")
 
-        print(f"join {self.current_node} with {merge_with}")
-        self.current_node = merge_with
-        if table_name not in self.join_graph.visited:
-            self.join_graph.visited[table_name] = []
-        self.join_graph.visited[table_name].append(merge_with)
 
-        self.update_join_buttons(table_name)
+    def edit_btn_pressed(self, table_name):
+        print("edit")
+        _.route(table_name, to="edit")
 
-    def update_join_buttons(self, table_name):
 
-        # Add Join Tables
-        current = self.current_node
-        for nei in self.join_graph.g[current]:
-            if nei in self.join_graph.visited[table_name]:
-                state = 'Disjoin'
-            else:
-                state = 'Join'
-            join_table_btn = ttk.Button(self.join_frame[table_name], text=f"{state} {nei}")
-            join_table_btn.config(command=lambda t=table_name, n=nei, btn=join_table_btn: self.join_table(t, n, btn))
-            join_table_btn.pack(side="left", padx=5)
+    def payment_btn_pressed(self, table_name):
+        print("payment")
+        _.route(table_name, to="edit")
+
+
         
