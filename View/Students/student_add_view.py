@@ -2,24 +2,30 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 import student_info_data_model as info
+import os,sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
+import Router.route as _
 
 
-class StudentAddView(tk.Tk):
-    def __init__(self):
-        super().__init__()
+class StudentAddView(tk.Toplevel):
+    def __init__(self,parent):
+        super().__init__(parent)
 
         # Window Info
-        self.title("Add Student")
+        self.title("Create New Student")
         self.geometry("1000x600")
-
+        
+    def load(self):
         elements = info.add_student_elements
+        placeholder = info.add_student_elements_placeholders
         self.entry = {}
 
         def back_btn_pressed():
+            _.route_back(self)
             print("Hello")
 
         back_btn = ttk.Button(self, text="Back",
-                    command=lambda: back_btn_pressed)
+                    command=back_btn_pressed)
         back_btn.pack(side="top", anchor="w", pady=10, padx=10)
 
         student_card = ttk.Frame(self)
@@ -37,9 +43,7 @@ class StudentAddView(tk.Tk):
         self.img_preview.pack(pady=5, anchor="center")
 
         def select_image():
-            self.withdraw()
             path = filedialog.askopenfilename(filetypes=[("Image Files", ["*.png","*.jpg","*.jpeg","*.gif"])])
-            self.deiconify()
             if path:
                 self.entry['Image'] = path
                 # Show image in label
@@ -77,12 +81,6 @@ class StudentAddView(tk.Tk):
                     values = values[0]
                 val = values[0]
                 match val:
-                    case 'entry':
-                        self.entry[label_text] = ttk.Entry(fields_frame)
-                        self.entry[label_text].grid(row=r, column=1, padx=20)
-                    case 'number':
-                        self.entry[label_text] = ttk.Entry(fields_frame)
-                        self.entry[label_text].grid(row=r, column=1, padx=20)
                     case 'radio':
                         radio_frame = ttk.Frame(fields_frame)
                         radio_frame.grid(row=r, column=1)
@@ -93,19 +91,38 @@ class StudentAddView(tk.Tk):
                             self.entry[option] = ttk.Radiobutton(radio_frame, text=option, variable=radio_var, value=option)
                             self.entry[option].grid(row=0, column=i, padx=20)
                         self.entry[label_text] = radio_var
+                    case _:
+                        entry_widget = ttk.Entry(fields_frame)
+                        entry_widget.insert(0, placeholder[label_text]) # placeholder
+                        entry_widget.grid(row=r, column=1, padx=20)
+                        entry_widget.config(foreground="grey")
+                        def on_focus_in(event, e=entry_widget, ph=placeholder[label_text]):
+                            if e.get() == ph:
+                                e.delete(0, tk.END)
+                                e.config(foreground="white")
+                        def on_focus_out(event, e=entry_widget, ph=placeholder[label_text]):
+                            if e.get() == "":
+                                e.insert(0, ph)
+                                e.config(foreground="grey")
+                        entry_widget.bind("<FocusIn>", on_focus_in)
+                        entry_widget.bind("<FocusOut>", on_focus_out)
+                        self.entry[label_text] = entry_widget
                 #print(values)
         def create_student():
             print("hello world")
+        
         create_btn = ttk.Button(vertical_stack, text="Create",
-                               command=lambda: create_student)
+                               command=create_student)
         create_btn.pack(side="top", pady=25, anchor="center")
+    
+    def view(self):
+        self.lift()
+        self.focus_force()    # Force focus to window
+        self.attributes('-topmost', True)  # Temporarily set as topmost
+        self.after(100, lambda: self.attributes('-topmost', False))  # Remove topmost after 100ms
+        self.state('zoomed')  # Open window in full screen mode
 
         
 
-if __name__ == "__main__":
-    sav = StudentAddView()
-    sav.lift()           # Bring window to front
-    sav.focus_force()    # Force focus to window
-    sav.attributes('-topmost', True)  # Temporarily set as topmost
-    sav.after(100, lambda: sav.attributes('-topmost', False))  # Remove topmost after 100ms
-    sav.mainloop()
+#sav = StudentAddView()
+# sav.mainloop()

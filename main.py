@@ -6,4 +6,5 @@ from View import TableView
 if __name__ == "__main__":
     # init_db()
     app = TableView.CoursesApp()
+    app.view()
     app.mainloop()

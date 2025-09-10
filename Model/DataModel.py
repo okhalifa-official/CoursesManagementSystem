@@ -1,3 +1,12 @@
+import random
+import string
+import fake_data as fake
+def random_string(length=None):
+    """Generate a random string of ASCII letters of random length between 4 and 20 if not specified."""
+    if length is None:
+        length = random.randint(4, 20)
+    return ''.join(random.choices(string.ascii_letters, k=length))
+
 Students = 'Students'
 Courses = 'Courses'
 Doctors = 'Doctors'
@@ -22,3 +31,41 @@ foreign_keys = {
 # nullable_fields = {
 #     'Courses': []
 # }
+
+from dataclasses import dataclass
+
+@dataclass
+class Student:
+    entry = {}
+    _student_fields = ['First Name*', 'Last Name*', 'Gender*', 
+                       'E-mail', 'Country Code*', 'Phone Number*', 
+                       'Address', 'University*', 'Barcode', 'Image']
+    def generate_sample(self):
+        for f in self._student_fields:
+            self.entry[f] = random_string()
+        self.entry['Gender*'] = 'Female'
+        self.entry['Image'] = '/Users/omarkhalifa/Downloads/pfp.jpg'
+    
+    def load_fake_data(self):
+        for i,f in enumerate(self._student_fields):
+            match i:
+                case 0:
+                    val = random.choice(fake.names)
+                case 1:
+                    val = random.choice(fake.names)
+                case 2:
+                    val = random.choice(['Male', 'Female'])
+                case 3:
+                    val = fake.random_email(self.entry['First Name*'], self.entry['Last Name*'])
+                case 4:
+                    val = random.choice(fake.country_codes)
+                case 5:
+                    val = fake.random_phone()
+                case 6:
+                    val = random.choice(fake.addresses)
+                case 7:
+                    val = random.choice(fake.universities)
+                case 8:
+                    val = fake.random_barcode()
+            self.entry[f] = val
+            self.entry['Image'] = '/Users/omarkhalifa/Downloads/pfp.jpg'

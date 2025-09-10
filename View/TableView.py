@@ -5,6 +5,7 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Controller'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Router'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'Students'))
 from Model import DataModel,DB
 from Controller import DataController
 from View import AddDialogViewController as AddDialog
@@ -15,6 +16,7 @@ from Router import route as _
 class CoursesApp(tk.Tk):
     def __init__(self):
         super().__init__()
+        
         # Window Info
         self.title("Courses Management System")
         self.geometry("1000x600")
@@ -49,12 +51,12 @@ class CoursesApp(tk.Tk):
             current = table_name
             create_btn = ttk.Button(self.action_btns_frame[current],
                                     text=f"Create New {current}",
-                                    command=lambda t=current: self.create_btn_pressed(t))
+                                    command=self.create_btn_pressed)
             create_btn.pack(side="left", padx=5)
 
             edit_btn = ttk.Button(self.action_btns_frame[current],
                                     text=f"Edit {current}",
-                                    command=lambda t=current: self.edit_btn_pressed(t))
+                                    command=self.edit_btn_pressed)
             edit_btn.pack(side="left", padx=5)
 
             payment_btn = ttk.Button(self.action_btns_frame[current],
@@ -160,19 +162,33 @@ class CoursesApp(tk.Tk):
             if any(query.lower() in str(cell).lower() for cell in r):
                 self.tables[table_name].insert("", "end", values=r)
     
-    def create_btn_pressed(self, table_name):
+    def create_btn_pressed(self):
         print("create")
-        _.route(table_name, to="create")
+        from View.Students.student_add_view import StudentAddView
+        new_student_view = StudentAddView(self)
+        _.route(current=self, to=new_student_view)
 
 
-    def edit_btn_pressed(self, table_name):
+    def edit_btn_pressed(self):
         print("edit")
-        _.route(table_name, to="edit")
+        from Model.DataModel import Student
+        student = Student()
+        student.load_fake_data()
+        from View.Students.student_edit_view import StudentEditView
+        new_student_view = StudentEditView(self,student)
+        _.route(current=self, to=new_student_view)
 
 
     def payment_btn_pressed(self, table_name):
         print("payment")
-        _.route(table_name, to="edit")
+        #_.route(table_name, to="edit")
+
+    def view(self):
+        self.lift()           # Bring window to front
+        self.focus_force()    # Force focus to window
+        self.attributes('-topmost', True)  # Temporarily set as topmost
+        self.after(100, lambda: self.attributes('-topmost', False))  # Remove topmost after 100ms
+        self.state('zoomed')  # Open window in full screen mode
 
 
         
