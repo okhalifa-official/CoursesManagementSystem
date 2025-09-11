@@ -4,7 +4,7 @@ from PIL import Image, ImageTk
 import student_info_data_model as info
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
-import Router.route as _
+import Router.route as _r
 
 
 class StudentAddView(tk.Toplevel):
@@ -21,7 +21,7 @@ class StudentAddView(tk.Toplevel):
         self.entry = {}
 
         def back_btn_pressed():
-            _.route_back(self)
+            _r.route_back(self)
             print("Hello")
 
         back_btn = ttk.Button(self, text="Back",

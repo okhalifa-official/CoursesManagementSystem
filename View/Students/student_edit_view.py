@@ -6,7 +6,7 @@ import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from DataModel import Student
-import Router.route as _
+import Router.route as _r
 
 
 class StudentEditView(tk.Toplevel):
@@ -25,7 +25,7 @@ class StudentEditView(tk.Toplevel):
         self.entry = {}
 
         def back_btn_pressed():
-            _.route_back(self)
+            _r.route_back(self)
             print("Hello")
 
         back_btn = ttk.Button(self, text="Back",

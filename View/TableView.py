@@ -10,7 +10,7 @@ from Model import DataModel,DB
 from Controller import DataController
 from View import AddDialogViewController as AddDialog
 from Model.Query import delete
-from Router import route as _
+from Router import route as _r
 
 # ------------------ Main App ------------------
 class CoursesApp(tk.Tk):
@@ -166,7 +166,7 @@ class CoursesApp(tk.Tk):
         print("create")
         from View.Students.student_add_view import StudentAddView
         new_student_view = StudentAddView(self)
-        _.route(current=self, to=new_student_view)
+        _r.route(current=self, to=new_student_view)
 
 
     def edit_btn_pressed(self):
@@ -176,12 +176,18 @@ class CoursesApp(tk.Tk):
         student.load_fake_data()
         from View.Students.student_edit_view import StudentEditView
         new_student_view = StudentEditView(self,student)
-        _.route(current=self, to=new_student_view)
+        _r.route(current=self, to=new_student_view)
 
 
     def payment_btn_pressed(self, table_name):
         print("payment")
-        #_.route(table_name, to="edit")
+        from Model.DataModel import Student
+        student = Student()
+        student.load_fake_data()
+        from View.Students.student_payment_view import StudentPaymentView
+        new_student_view = StudentPaymentView(self,student)
+        _r.route(current=self, to=new_student_view)
+        #_r.route(table_name, to="edit")
 
     def view(self):
         self.lift()           # Bring window to front
