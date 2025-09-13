@@ -109,7 +109,7 @@ class CourseAddView(tk.Toplevel):
                         def on_focus_in(event, e=entry_widget, ph=placeholder[label_text]):
                             if e.get() == ph:
                                 e.delete(0, tk.END)
-                                e.config(foreground="white")
+                                e.config(foreground="")
                         def on_focus_out(event, e=entry_widget, ph=placeholder[label_text]):
                             if e.get() == "":
                                 e.insert(0, ph)

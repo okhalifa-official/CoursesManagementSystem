@@ -132,7 +132,7 @@ class CourseEditView(tk.Toplevel):
                         entry_widget = ttk.Entry(fields_frame)
                         if course.entry[label_text]:
                             entry_widget.insert(0, course.entry[label_text])
-                            entry_widget.config(foreground="white")
+                            entry_widget.config(foreground="")
                         else:
                             entry_widget.insert(0, placeholder[label_text]) # placeholder
                             entry_widget.config(foreground="grey")
@@ -142,7 +142,7 @@ class CourseEditView(tk.Toplevel):
                         def on_focus_in(event, e=entry_widget, ph=placeholder[label_text]):
                             if e.get() == ph:
                                 e.delete(0, tk.END)
-                                e.config(foreground="white")
+                                e.config(foreground="")
                         def on_focus_out(event, e=entry_widget, ph=placeholder[label_text]):
                             if e.get() == "":
                                 e.insert(0, ph)

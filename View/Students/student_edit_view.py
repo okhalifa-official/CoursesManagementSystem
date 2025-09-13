@@ -122,14 +122,14 @@ class StudentEditView(tk.Toplevel):
                         entry_widget.grid(row=r, column=1, padx=20)
                         if student.entry[label_text]:
                             entry_widget.insert(0, student.entry[label_text])
-                            entry_widget.config(foreground="white")
+                            entry_widget.config(foreground="")
                         else:
                             entry_widget.insert(0, placeholder[label_text]) # placeholder
                             entry_widget.config(foreground="grey")
                         def on_focus_in(event, e=entry_widget, ph=placeholder[label_text]):
                             if e.get() == ph:
                                 e.delete(0, tk.END)
-                                e.config(foreground="white")
+                                e.config(foreground="")
                         def on_focus_out(event, e=entry_widget, ph=placeholder[label_text]):
                             if e.get() == "":
                                 e.insert(0, ph)

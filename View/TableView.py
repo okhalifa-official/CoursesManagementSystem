@@ -174,6 +174,11 @@ class CoursesApp(tk.Tk):
             from View.Courses.course_add_view import CourseAddView
             new_course_view = CourseAddView(self)
             _r.route(current=self, to=new_course_view)
+        elif table_name == 'Doctors':
+            print('course')
+            from View.Doctors.doctor_add_view import DoctorAddView
+            new_doctor_view = DoctorAddView(self)
+            _r.route(current=self, to=new_doctor_view)
 
 
     def edit_btn_pressed(self, table_name):
@@ -192,6 +197,13 @@ class CoursesApp(tk.Tk):
             from View.Courses.course_edit_view import CourseEditView
             new_course_view = CourseEditView(self,course)
             _r.route(current=self, to=new_course_view)
+        elif table_name == 'Doctors':
+            from Model.DataModel import Doctor
+            doctor = Doctor()
+            doctor.load_fake_data()
+            from View.Doctors.doctor_edit_view import DoctorEditView
+            new_doctor_view = DoctorEditView(self,doctor)
+            _r.route(current=self, to=new_doctor_view)
 
 
     def payment_btn_pressed(self, table_name):

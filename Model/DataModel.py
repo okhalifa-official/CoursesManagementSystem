@@ -37,17 +37,17 @@ from dataclasses import dataclass
 @dataclass
 class Student:
     entry = {}
-    _student_fields = ['First Name*', 'Last Name*', 'Gender*', 
+    _doctor_fields = ['First Name*', 'Last Name*', 'Gender*', 
                        'E-mail', 'Country Code*', 'Phone Number*', 
                        'Address', 'University*', 'Barcode', 'Image']
     def generate_sample(self):
-        for f in self._student_fields:
+        for f in self._doctor_fields:
             self.entry[f] = random_string()
         self.entry['Gender*'] = 'Female'
         self.entry['Image'] = '/Users/omarkhalifa/Downloads/pfp.jpg'
     
     def load_fake_data(self):
-        for i,f in enumerate(self._student_fields):
+        for i,f in enumerate(self._doctor_fields):
             match i:
                 case 0:
                     val = random.choice(fake.names)
@@ -75,7 +75,7 @@ class Student:
 class Course:
     entry = {}
     _course_fields = ['Course Name*', 'Price*', 'Instructor*', 
-                       'Start Date*', 'End Date*']
+                       'Start Date*', 'End Date*', 'Image']
     def generate_sample(self):
         for f in self._course_fields:
             self.entry[f] = random_string()
@@ -98,3 +98,30 @@ class Course:
                     val = en
             self.entry[f] = val
             self.entry['Image'] = '/Users/omarkhalifa/Downloads/bigO.png'
+
+@dataclass
+class Doctor:
+    entry = {}
+    _doctor_fields = ['First Name*', 'Last Name*', 'Gender*', 
+                       'E-mail', 'Country Code*', 'Phone Number*']
+    def generate_sample(self):
+        for f in self._doctor_fields:
+            self.entry[f] = random_string()
+        self.entry['Gender*'] = 'Female'
+    
+    def load_fake_data(self):
+        for i,f in enumerate(self._doctor_fields):
+            match i:
+                case 0:
+                    val = random.choice(fake.names)
+                case 1:
+                    val = random.choice(fake.names)
+                case 2:
+                    val = random.choice(['Male', 'Female'])
+                case 3:
+                    val = fake.random_email(self.entry['First Name*'], self.entry['Last Name*'])
+                case 4:
+                    val = random.choice(fake.country_codes)
+                case 5:
+                    val = fake.random_phone()
+            self.entry[f] = val
