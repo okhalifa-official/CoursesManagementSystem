@@ -17,6 +17,23 @@ universities = [
     "Yale University", "Princeton University", "Columbia University", "Caltech", "UCLA"
 ]
 
+course_names = [
+    "Anatomy", "Physiology", "Histology", "Genetics", "Immunology", "Pathophysiology", "Medical Ethics", "Epidemiology", "Clinical Skills", "Neuroscience",
+    "Biochemistry", "Microbiology", "Pharmacology", "Pathology", "Cardiology", "Dermatology", "Endocrinology", "Gastroenterology", "Hematology", "Nephrology"
+]
+
+def random_course_name():
+    return random.choice(course_names)
+
+def random_course_price():
+    return f"{random.randint(500, 2000)} EGP"
+
+def random_start_end_dates():
+    from datetime import datetime, timedelta
+    start = datetime.now() + timedelta(days=random.randint(1, 60))
+    end = start + timedelta(days=random.randint(30, 120))
+    return start.date(), end.date()
+
 def random_email(first, last):
     domains = ["gmail.com", "yahoo.com", "outlook.com", "edu.com", "mail.com"]
     return f"{first.lower()}.{last.lower()}@{random.choice(domains)}"

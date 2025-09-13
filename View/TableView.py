@@ -51,20 +51,15 @@ class CoursesApp(tk.Tk):
             current = table_name
             create_btn = ttk.Button(self.action_btns_frame[current],
                                     text=f"Create New {current}",
-                                    command=self.create_btn_pressed)
+                                    command= lambda t=current: self.create_btn_pressed(t))
             create_btn.pack(side="left", padx=5)
 
             edit_btn = ttk.Button(self.action_btns_frame[current],
                                     text=f"Edit {current}",
-                                    command=self.edit_btn_pressed)
+                                    command= lambda t=current: self.edit_btn_pressed(t))
             edit_btn.pack(side="left", padx=5)
 
-            payment_btn = ttk.Button(self.action_btns_frame[current],
-                                    text=f"Add Payment",
-                                    command=lambda t=current: self.payment_btn_pressed(t))
-            payment_btn.pack(side="left", padx=5)
 
-            
 
             # Add search bar
             search_var = tk.StringVar()
@@ -103,6 +98,11 @@ class CoursesApp(tk.Tk):
             # Style Buttons
             add_btn.pack(side="left", padx=5, pady=5)
             del_btn.pack(side="left", padx=5, pady=5)
+
+        payment_btn = ttk.Button(self.action_btns_frame['Students'],
+                                text=f"Add Payment",
+                                command=lambda t='Students': self.payment_btn_pressed(t))
+        payment_btn.pack(side="left", padx=5)
 
 
         # Bind tab change event to update current_node
@@ -162,21 +162,36 @@ class CoursesApp(tk.Tk):
             if any(query.lower() in str(cell).lower() for cell in r):
                 self.tables[table_name].insert("", "end", values=r)
     
-    def create_btn_pressed(self):
+    def create_btn_pressed(self, table_name):
         print("create")
-        from View.Students.student_add_view import StudentAddView
-        new_student_view = StudentAddView(self)
-        _r.route(current=self, to=new_student_view)
+        if table_name == 'Students':
+            print('student')
+            from View.Students.student_add_view import StudentAddView
+            new_student_view = StudentAddView(self)
+            _r.route(current=self, to=new_student_view)
+        elif table_name == 'Courses':
+            print('course')
+            from View.Courses.course_add_view import CourseAddView
+            new_course_view = CourseAddView(self)
+            _r.route(current=self, to=new_course_view)
 
 
-    def edit_btn_pressed(self):
+    def edit_btn_pressed(self, table_name):
         print("edit")
-        from Model.DataModel import Student
-        student = Student()
-        student.load_fake_data()
-        from View.Students.student_edit_view import StudentEditView
-        new_student_view = StudentEditView(self,student)
-        _r.route(current=self, to=new_student_view)
+        if table_name == 'Students':
+            from Model.DataModel import Student
+            student = Student()
+            student.load_fake_data()
+            from View.Students.student_edit_view import StudentEditView
+            new_student_view = StudentEditView(self,student)
+            _r.route(current=self, to=new_student_view)
+        elif table_name == 'Courses':
+            from Model.DataModel import Course
+            course = Course()
+            course.load_fake_data()
+            from View.Courses.course_edit_view import CourseEditView
+            new_course_view = CourseEditView(self,course)
+            _r.route(current=self, to=new_course_view)
 
 
     def payment_btn_pressed(self, table_name):

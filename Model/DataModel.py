@@ -69,3 +69,35 @@ class Student:
                     val = fake.random_barcode()
             self.entry[f] = val
             self.entry['Image'] = '/Users/omarkhalifa/Downloads/pfp.jpg'
+
+
+@dataclass
+class Course:
+    entry = {}
+    _course_fields = ['Course Name*', 'Price*', 'Instructor*', 
+                       'Start Date*', 'End Date*', 'Discount'
+                        ]
+    def generate_sample(self):
+        for f in self._course_fields:
+            self.entry[f] = random_string()
+        self.entry['Instructor*'] = 'Dr. Green'
+        self.entry['Image'] = '/Users/omarkhalifa/Downloads/pfp.jpg'
+    
+    def load_fake_data(self):
+        strt, en = fake.random_start_end_dates()
+        for i,f in enumerate(self._course_fields):
+            match i:
+                case 0:
+                    val = fake.random_course_name()
+                case 1:
+                    val = fake.random_course_price()
+                case 2:
+                    val = 'Dr. Green'
+                case 3:
+                    val = strt
+                case 4:
+                    val = en
+                case 5:
+                    val = None
+            self.entry[f] = val
+            self.entry['Image'] = '/Users/omarkhalifa/Downloads/bigO.png'

@@ -94,60 +94,6 @@ class StudentPaymentView(tk.Toplevel):
         barcode_label = ttk.Label(vertical_stack, text=f"Barcode: {student.entry['Barcode']}")
         barcode_label.grid(pady=(5,5), row=3, column=0, sticky="w", padx=(0,20))
 
-        # for r, row in enumerate(elements):
-        #     for c,col in enumerate(row):
-        #         # fields_frame.grid_rowconfigure(r, weight=1)
-
-        #         label_text = list(col.keys())[0]
-        #         label = ttk.Label(fields_frame, text=f"{label_text}")
-        #         label.grid(row=r, column=0, pady=15, padx=30, sticky="w")
-                
-        #         values = list(col.values())
-        #         if type(values[0]).__name__ == 'list':
-        #             values = values[0]
-        #         val = values[0]
-
-        #         match val:
-        #             case 'radio':
-        #                 radio_frame = ttk.Frame(fields_frame)
-        #                 radio_frame.grid(row=r, column=1)
-        #                 options = values[1:]
-        #                 radio_var = tk.StringVar()
-        #                 if student.entry[label_text]:
-        #                     radio_var.set(student.entry[label_text])
-        #                 else:
-        #                     radio_var.set(options[0])
-        #                 for i, option in enumerate(options):
-        #                     self.entry[option] = ttk.Radiobutton(radio_frame, text=option, variable=radio_var, value=option)
-        #                     self.entry[option].grid(row=0, column=i, padx=20)
-        #                 self.entry[label_text] = radio_var
-        #             case _:
-        #                 entry_widget = ttk.Entry(fields_frame)
-        #                 entry_widget.grid(row=r, column=1, padx=20)
-        #                 if student.entry[label_text]:
-        #                     entry_widget.insert(0, student.entry[label_text])
-        #                     entry_widget.config(foreground="white")
-        #                 else:
-        #                     entry_widget.insert(0, placeholder[label_text]) # placeholder
-        #                     entry_widget.config(foreground="grey")
-        #                 def on_focus_in(event, e=entry_widget, ph=placeholder[label_text]):
-        #                     if e.get() == ph:
-        #                         e.delete(0, tk.END)
-        #                         e.config(foreground="white")
-        #                 def on_focus_out(event, e=entry_widget, ph=placeholder[label_text]):
-        #                     if e.get() == "":
-        #                         e.insert(0, ph)
-        #                         e.config(foreground="grey")
-        #                 entry_widget.bind("<FocusIn>", on_focus_in)
-        #                 entry_widget.bind("<FocusOut>", on_focus_out)
-        #                 self.entry[label_text] = entry_widget
-                        
-                #print(values)
-        def update_student():
-            print("hello world")
-        def delete_student():
-            print("delete")
-
         # ==========================   COURSES TABLE VIEW
         filter_frame = ttk.Frame(courses_table_frame)
         filter_frame.pack(fill="x", pady=(10,5), padx=(10,10))
