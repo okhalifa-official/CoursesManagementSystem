@@ -10,8 +10,7 @@ add_student_elements = [
     [{"Price*": number}],
     [{"Instructor*": combo_box}],
     [{"Start Date*": date}],
-    [{"End Date*": date}],
-    [{"Discount": number}]
+    [{"End Date*": date}]
 ]
 
 add_student_elements_placeholders = {
@@ -19,6 +18,5 @@ add_student_elements_placeholders = {
     "Price*": "e.g. 1000 EGP",
     "Instructor*": "select an instructor",
     "Start Date*": "select start date",
-    "End Date*": "select end date",
-    "Discount": "e.g. 10%" 
+    "End Date*": "select end date"
 }

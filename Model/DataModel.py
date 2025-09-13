@@ -75,8 +75,7 @@ class Student:
 class Course:
     entry = {}
     _course_fields = ['Course Name*', 'Price*', 'Instructor*', 
-                       'Start Date*', 'End Date*', 'Discount'
-                        ]
+                       'Start Date*', 'End Date*']
     def generate_sample(self):
         for f in self._course_fields:
             self.entry[f] = random_string()
@@ -97,7 +96,5 @@ class Course:
                     val = strt
                 case 4:
                     val = en
-                case 5:
-                    val = None
             self.entry[f] = val
             self.entry['Image'] = '/Users/omarkhalifa/Downloads/bigO.png'

@@ -51,18 +51,18 @@ class CourseEditView(tk.Toplevel):
             path = course.entry['Image']
             # Show image in label
             img = Image.open(path)
-            # Calculate new size to ensure min width/height 310
+            # Calculate new size to ensure min width/height 270
             w, h = img.size
-            scale = max(310/w, 310/h)
+            scale = max(270/w, 270/h)
             new_w, new_h = int(w*scale), int(h*scale)
             img = img.resize((new_w, new_h), Image.LANCZOS)
             # Center crop to 160x160 if needed
-            if new_w > 310 or new_h > 310:
-                left = (new_w - 310) // 2
-                top = (new_h - 310) // 2
-                img = img.crop((left, top, left+310, top+310))
+            if new_w > 270 or new_h > 270:
+                left = (new_w - 270) // 2
+                top = (new_h - 270) // 2
+                img = img.crop((left, top, left+270, top+270))
             self.img_tk = ImageTk.PhotoImage(img)
-            self.img_preview.config(image=self.img_tk, text="", width=310, height=310)
+            self.img_preview.config(image=self.img_tk, text="", width=270, height=270)
 
         def select_image():
             path = filedialog.askopenfilename(filetypes=[("Image Files", ["*.png","*.jpg","*.jpeg","*.gif"])])
@@ -70,18 +70,18 @@ class CourseEditView(tk.Toplevel):
                 self.entry['Image'] = path
                 # Show image in label
                 img = Image.open(path)
-                # Calculate new size to ensure min width/height 310
+                # Calculate new size to ensure min width/height 270
                 w, h = img.size
-                scale = max(310/w, 310/h)
+                scale = max(270/w, 270/h)
                 new_w, new_h = int(w*scale), int(h*scale)
                 img = img.resize((new_w, new_h), Image.LANCZOS)
                 # Center crop to 160x160 if needed
-                if new_w > 310 or new_h > 310:
-                    left = (new_w - 310) // 2
-                    top = (new_h - 310) // 2
-                    img = img.crop((left, top, left+310, top+310))
+                if new_w > 270 or new_h > 270:
+                    left = (new_w - 270) // 2
+                    top = (new_h - 270) // 2
+                    img = img.crop((left, top, left+270, top+270))
                 self.img_tk = ImageTk.PhotoImage(img)
-                self.img_preview.config(image=self.img_tk, text="", width=310, height=310)
+                self.img_preview.config(image=self.img_tk, text="", width=270, height=270)
                 print(f"image updated {path}")
         img_btn = ttk.Button(left_vertical_stack, text="Select Image", command=select_image, width=10)
         img_btn.pack(fill="x", pady=(20,5), anchor="center")
