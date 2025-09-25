@@ -6,9 +6,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Controller'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Router'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'Students'))
-from Model import DataModel,DB,DataArchitecture
+from Model import DataModel,DB
 from Controller import DataController
-from View import AddDialogViewController as AddDialog
 from Model.Query import delete
 from Router import route as _r
 
