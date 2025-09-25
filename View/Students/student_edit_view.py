@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
-import student_info_data_model as info
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from DataModel import Student
+import DataArchitecture as DataArch
 import Router.route as _r
 
 
@@ -20,8 +20,8 @@ class StudentEditView(tk.Toplevel):
 
     def load(self):
         student = self.student
-        elements = info.add_student_elements
-        placeholder = info.add_student_elements_placeholders
+        elements = DataArch.add_student_elements
+        placeholder = DataArch.add_student_elements_placeholders
         self.entry = {}
 
         def back_btn_pressed():
@@ -47,8 +47,8 @@ class StudentEditView(tk.Toplevel):
         self.img_preview.pack(pady=5, anchor="center")
 
         # Load existing image
-        if student.entry['Image']:
-            path = student.entry['Image']
+        if student._student_data['Image']:
+            path = student._student_data['Image']
             # Show image in label
             img = Image.open(path)
             # Calculate new size to ensure min width/height 160
@@ -109,8 +109,8 @@ class StudentEditView(tk.Toplevel):
                         radio_frame.grid(row=r, column=1)
                         options = values[1:]
                         radio_var = tk.StringVar()
-                        if student.entry[label_text]:
-                            radio_var.set(student.entry[label_text])
+                        if student._student_data[label_text]:
+                            radio_var.set(student._student_data[label_text])
                         else:
                             radio_var.set(options[0])
                         for i, option in enumerate(options):
@@ -120,8 +120,8 @@ class StudentEditView(tk.Toplevel):
                     case _:
                         entry_widget = ttk.Entry(fields_frame)
                         entry_widget.grid(row=r, column=1, padx=20)
-                        if student.entry[label_text]:
-                            entry_widget.insert(0, student.entry[label_text])
+                        if student._student_data[label_text]:
+                            entry_widget.insert(0, student._student_data[label_text])
                             entry_widget.config(foreground="")
                         else:
                             entry_widget.insert(0, placeholder[label_text]) # placeholder

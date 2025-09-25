@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
-import student_info_data_model as info
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
+import DataArchitecture as DataArch
 import Router.route as _r
 
 
@@ -16,8 +16,8 @@ class StudentAddView(tk.Toplevel):
         self.geometry("1000x600")
         
     def load(self):
-        elements = info.add_student_elements
-        placeholder = info.add_student_elements_placeholders
+        elements = DataArch.add_student_elements
+        placeholder = DataArch.add_student_elements_placeholders
         self.entry = {}
 
         def back_btn_pressed():

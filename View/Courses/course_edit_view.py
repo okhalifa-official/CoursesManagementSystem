@@ -2,11 +2,12 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 from tkcalendar import DateEntry
-import View.Courses.course_info_data_model as info
+from datetime import datetime
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from DataModel import Course
+import DataArchitecture as DataArch
 import Router.route as _r
 
 
@@ -21,8 +22,8 @@ class CourseEditView(tk.Toplevel):
         
     def load(self):
         course = self.course
-        elements = info.add_student_elements
-        placeholder = info.add_student_elements_placeholders
+        elements = DataArch.add_course_elements
+        placeholder = DataArch.add_course_elements_placeholders
         self.entry = {}
 
         def back_btn_pressed():
@@ -47,8 +48,8 @@ class CourseEditView(tk.Toplevel):
         self.img_preview.pack(fill="both", expand=True)
 
         # Load existing image
-        if course.entry['Image']:
-            path = course.entry['Image']
+        if course._course_data['Image']:
+            path = course._course_data['Image']
             # Show image in label
             img = Image.open(path)
             # Calculate new size to ensure min width/height 270
@@ -110,8 +111,8 @@ class CourseEditView(tk.Toplevel):
                         radio_frame.grid(row=r, column=1)
                         options = values[1:]
                         radio_var = tk.StringVar()
-                        if course.entry[label_text]:
-                            radio_var.set(course.entry[label_text])
+                        if course._course_data[label_text]:
+                            radio_var.set(course._course_data[label_text])
                         else:
                             radio_var.set(options[0])
                         for i, option in enumerate(options):
@@ -121,17 +122,17 @@ class CourseEditView(tk.Toplevel):
                     case 'combo_box':
                         entry_widget = ttk.Combobox(fields_frame, textvariable=placeholder[label_text], values=["Dr. James Bond", "Dr. Marshmallow", "Dr. Green"], state="readonly")
                         entry_widget.grid(row=r, column=1, padx=20)
-                        entry_widget.set(course.entry[label_text])
+                        entry_widget.set(course._course_data[label_text])
                         self.entry[label_text] = entry_widget
                     case 'date':
                         entry_widget = DateEntry(fields_frame, state="readonly", foreground="white", background="grey", bordercolor="black", headersbackground="white", headersforeground="grey", normalbackground="white", normalforeground="white", weekendbackground="grey", weekendforeground="white", selectbackground="black", selectforeground="yellow")
                         entry_widget.grid(row=r, column=1, padx=20)
-                        entry_widget.set_date(course.entry[label_text])
+                        entry_widget.set_date(datetime.strptime(course._course_data[label_text], "%Y-%m-%d").date())
                         self.entry[label_text] = entry_widget
                     case _:
                         entry_widget = ttk.Entry(fields_frame)
-                        if course.entry[label_text]:
-                            entry_widget.insert(0, course.entry[label_text])
+                        if course._course_data[label_text]:
+                            entry_widget.insert(0, course._course_data[label_text])
                             entry_widget.config(foreground="")
                         else:
                             entry_widget.insert(0, placeholder[label_text]) # placeholder

@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
-import View.Doctors.doctor_info_data_model as info
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from DataModel import Doctor
+import DataArchitecture as DataArch
 import Router.route as _r
 
 
@@ -20,8 +20,8 @@ class DoctorEditView(tk.Toplevel):
         
     def load(self):
         doctor = self.doctor
-        elements = info.add_student_elements
-        placeholder = info.add_student_elements_placeholders
+        elements = DataArch.add_doctor_elements
+        placeholder = DataArch.add_doctor_elements_placeholders
         self.entry = {}
 
         def back_btn_pressed():
@@ -40,33 +40,6 @@ class DoctorEditView(tk.Toplevel):
         vertical_stack = tk.Frame(doctor_card)
         vertical_stack.pack(expand=True, fill="both", anchor="center")
         vertical_stack.place(relx=.5, rely=.5, anchor="c")
-        
-        # # Add picture box (image preview + select button)
-        # self.entry['Student Image'] = None
-        # self.img_preview = tk.Label(vertical_stack, text="No Image", width=20, height=8, bg="#eee", relief="ridge")
-        # self.img_preview.pack(pady=5, anchor="center")
-
-        # def select_image():
-        #     path = filedialog.askopenfilename(filetypes=[("Image Files", ["*.png","*.jpg","*.jpeg","*.gif"])])
-        #     if path:
-        #         self.entry['Image'] = path
-        #         # Show image in label
-        #         img = Image.open(path)
-        #         # Calculate new size to ensure min width/height 160
-        #         w, h = img.size
-        #         scale = max(160/w, 160/h)
-        #         new_w, new_h = int(w*scale), int(h*scale)
-        #         img = img.resize((new_w, new_h), Image.LANCZOS)
-        #         # Center crop to 160x160 if needed
-        #         if new_w > 160 or new_h > 160:
-        #             left = (new_w - 160) // 2
-        #             top = (new_h - 160) // 2
-        #             img = img.crop((left, top, left+160, top+160))
-        #         self.img_tk = ImageTk.PhotoImage(img)
-        #         self.img_preview.config(image=self.img_tk, text="", width=160, height=160)
-        #         print(f"image updated {path}")
-        # img_btn = ttk.Button(vertical_stack, text="Select Image", command=select_image, width=10)
-        # img_btn.pack(pady=5, anchor="center")
 
         fields_frame = ttk.Labelframe(vertical_stack, text="Doctor Info")
         fields_frame.pack(pady=0, anchor="center")
@@ -74,7 +47,6 @@ class DoctorEditView(tk.Toplevel):
         #--------------- Create New Doctor
         for r, row in enumerate(elements):
             for c,col in enumerate(row):
-                # fields_frame.grid_rowconfigure(r, weight=1)
 
                 label_text = list(col.keys())[0]
                 label = ttk.Label(fields_frame, text=f"{label_text}")
@@ -90,8 +62,8 @@ class DoctorEditView(tk.Toplevel):
                         radio_frame.grid(row=r, column=1)
                         options = values[1:]
                         radio_var = tk.StringVar()
-                        if doctor.entry[label_text]:
-                            radio_var.set(doctor.entry[label_text])
+                        if doctor._doctor_data[label_text]:
+                            radio_var.set(doctor._doctor_data[label_text])
                         else:
                             radio_var.set(options[0])
                         for i, option in enumerate(options):
@@ -100,8 +72,8 @@ class DoctorEditView(tk.Toplevel):
                         self.entry[label_text] = radio_var
                     case _:
                         entry_widget = ttk.Entry(fields_frame)
-                        if doctor.entry[label_text]:
-                            entry_widget.insert(0, doctor.entry[label_text])
+                        if doctor._doctor_data[label_text]:
+                            entry_widget.insert(0, doctor._doctor_data[label_text])
                             entry_widget.config(foreground="")
                         else:
                             entry_widget.insert(0, placeholder[label_text]) # placeholder

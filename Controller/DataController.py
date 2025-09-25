@@ -11,13 +11,9 @@ database = db()
 def load_data(table_name):
     tables_relations = [(table_name, '')]
     try:
-        if table_name == 'Students':
-            cursor = select.student_select_special(database)
-        else:
-            cursor = select.select(database, tables_relations)
+        cursor = select.select(database, tables_relations)
     except Exception as error:
         print(f"Failed loading data: {error}")
         return None
-    
     rows = cursor.fetchall()
     return rows

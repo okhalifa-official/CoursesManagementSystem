@@ -1,53 +1,46 @@
 import random
 import string
 import fake_data as fake
+import DataArchitecture as DataArch
+from Query import select
+import DB
 def random_string(length=None):
     """Generate a random string of ASCII letters of random length between 4 and 20 if not specified."""
     if length is None:
         length = random.randint(4, 20)
     return ''.join(random.choices(string.ascii_letters, k=length))
 
-Students = 'Students'
-Courses = 'Courses'
-Doctors = 'Doctors'
-Student_Enrollment = 'Student_Enrollment'
-Payments = 'Payments'
 
-model = {
-    'Students': ['id','Student', 'Course', 'Doctor', 'Payment ID'],
-    'Courses': ['id', 'name', 'doctor_id'],
-    'Doctors': ['id', 'name'],
-    'Student_Enrollment': ['id', 'student_id', 'course_id'],
-    'Payments': ['id', 'student_id', 'course_id']
-}
+model = {}
+for i in range(3):
+    model[DataArch.entities[i]] = DataArch.columns[i]
 
-# {Table_name: [{fk, to_table, pk},{..,..,..}]}
-foreign_keys = {
-    'Courses': [('doctor_id','Doctors','id')],
-    'Student_Enrollment': [('student_id', 'Students', 'id'), ('course_id', 'Courses', 'id')],
-    'Payments': [('student_id', 'Students', 'id'), ('course_id', 'Courses', 'id')]
-}
-
-# nullable_fields = {
-#     'Courses': []
-# }
 
 from dataclasses import dataclass
 
 @dataclass
 class Student:
     entry = {}
-    _doctor_fields = ['First Name*', 'Last Name*', 'Gender*', 
+    _student_columns = DataArch.columns[0]
+    _student_data = {'Image':None}
+    _student_fields = ['First Name*', 'Last Name*', 'Gender*', 
                        'E-mail', 'Country Code*', 'Phone Number*', 
                        'Address', 'University*', 'Barcode', 'Image']
+    
+    def __init__(self, id):
+        # load student data with given 'ID'
+        record = select.select_by_id(DB.db(), 'students', id).fetchall()[0]
+        for i in range(len(self._student_columns)):
+            self._student_data[self._student_columns[i]] = record[i]
+
     def generate_sample(self):
-        for f in self._doctor_fields:
+        for f in self._student_fields:
             self.entry[f] = random_string()
         self.entry['Gender*'] = 'Female'
         self.entry['Image'] = '/Users/omarkhalifa/Downloads/pfp.jpg'
     
     def load_fake_data(self):
-        for i,f in enumerate(self._doctor_fields):
+        for i,f in enumerate(self._student_fields):
             match i:
                 case 0:
                     val = random.choice(fake.names)
@@ -74,12 +67,21 @@ class Student:
 @dataclass
 class Course:
     entry = {}
+    _course_columns = DataArch.columns[2]
+    _course_data = {'Image':None}
     _course_fields = ['Course Name*', 'Price*', 'Instructor*', 
                        'Start Date*', 'End Date*', 'Image']
+    
+    def __init__(self, id):
+        # load course data with given 'ID'
+        record = select.select_by_id(DB.db(), 'courses', id).fetchall()[0]
+        for i in range(len(self._course_columns)):
+            self._course_data[self._course_columns[i]] = record[i]
+    
     def generate_sample(self):
         for f in self._course_fields:
             self.entry[f] = random_string()
-        self.entry['Instructor*'] = 'Dr. Green'
+        self.entry['Instructor*'] = 'Dr. Yousef Ahmed'
         self.entry['Image'] = '/Users/omarkhalifa/Downloads/pfp.jpg'
     
     def load_fake_data(self):
@@ -91,19 +93,28 @@ class Course:
                 case 1:
                     val = fake.random_course_price()
                 case 2:
-                    val = 'Dr. Green'
+                    val = 'Dr. Yousef Mohamed'
                 case 3:
                     val = strt
                 case 4:
                     val = en
             self.entry[f] = val
-            self.entry['Image'] = '/Users/omarkhalifa/Downloads/bigO.png'
+            self.entry['Image'] = '/Users/omarkhalifa/Downloads/medical.jpeg'
 
 @dataclass
 class Doctor:
     entry = {}
+    _doctor_columns = DataArch.columns[1]
+    _doctor_data = {}
     _doctor_fields = ['First Name*', 'Last Name*', 'Gender*', 
                        'E-mail', 'Country Code*', 'Phone Number*']
+    
+    def __init__(self, id):
+        # load student data with given 'ID'
+        record = select.select_by_id(DB.db(), 'doctors', id).fetchall()[0]
+        for i in range(len(self._doctor_columns)):
+            self._doctor_data[self._doctor_columns[i]] = record[i]
+    
     def generate_sample(self):
         for f in self._doctor_fields:
             self.entry[f] = random_string()
@@ -125,3 +136,7 @@ class Doctor:
                 case 5:
                     val = fake.random_phone()
             self.entry[f] = val
+
+Students = []
+Doctors = []
+Courses = []

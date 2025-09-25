@@ -28,3 +28,15 @@ def select(database, table_relation):
     cursor.execute(query)
     database.commit()
     return cursor
+
+# select a record by ID from the given table (table_name)
+def select_by_id(database, table_name, ID):
+    query = f"""
+        SELECT *
+        FROM {table_name}
+        WHERE id = {ID}
+    """
+    cursor = database.cursor()
+    cursor.execute(query)
+    database.commit()
+    return cursor
