@@ -2,12 +2,14 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from tkcalendar import DateEntry
 from PIL import Image, ImageTk
-import student_info_data_model as info
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from DataModel import Student
+import DataArchitecture as DataArch
 import Router.route as _r
+from Query import select
+import DB
 
 
 class StudentPaymentView(tk.Toplevel):
@@ -21,8 +23,6 @@ class StudentPaymentView(tk.Toplevel):
 
     def load(self):
         student = self.student
-        elements = info.add_student_elements
-        placeholder = info.add_student_elements_placeholders
         self.entry = {}
 
         def back_btn_pressed():
@@ -62,8 +62,8 @@ class StudentPaymentView(tk.Toplevel):
         self.img_preview.pack(side="top")
 
         # Load existing image
-        if student.entry['Image']:
-            path = student.entry['Image']
+        if student._student_data['Image']:
+            path = student._student_data['Image']
             # Show image in label
             img = Image.open(path)
             # Calculate new size to ensure min width/height 100
@@ -81,17 +81,17 @@ class StudentPaymentView(tk.Toplevel):
         
         #--------------- Student Details
 
-        name_label = ttk.Label(vertical_stack, text=f"Name: {student.entry['First Name*']} {student.entry['Last Name*']}")
+        name_label = ttk.Label(vertical_stack, text=f"Name: {student._student_data[student._student_columns[1]]} {student._student_data[student._student_columns[2]]}")
         name_label.grid(pady=(5,0), row=0, column=0, sticky="w", padx=(0,20))
-        email_label = ttk.Label(vertical_stack, text=f"Email: {student.entry['E-mail']}")
+        email_label = ttk.Label(vertical_stack, text=f"Email: {student._student_data[student._student_columns[7]]}")
         email_label.grid(pady=(5,0), row=0, column=1, sticky="w", padx=(50,0))
-        phone_label = ttk.Label(vertical_stack, text=f"Phone number: {student.entry['Country Code*']} {student.entry['Phone Number*']}")
+        phone_label = ttk.Label(vertical_stack, text=f"Phone number: {student._student_data[student._student_columns[4]]} {student._student_data[student._student_columns[5]]}")
         phone_label.grid(pady=(5,0), row=1, column=0, sticky="w")
-        address_label = ttk.Label(vertical_stack, text=f"Address: {student.entry['Address']}")
+        address_label = ttk.Label(vertical_stack, text=f"Address: {student._student_data[student._student_columns[6]]}")
         address_label.grid(pady=(5,0), row=1, column=1, sticky="w", padx=(50,0))
-        university_label = ttk.Label(vertical_stack, text=f"University: {student.entry['University*']}")
+        university_label = ttk.Label(vertical_stack, text=f"University: {student._student_data[student._student_columns[8]]}")
         university_label.grid(pady=(5,0), row=2, column=0, sticky="w", padx=(0,20))
-        barcode_label = ttk.Label(vertical_stack, text=f"Barcode: {student.entry['Barcode']}")
+        barcode_label = ttk.Label(vertical_stack, text=f"Barcode: {student._student_data[student._student_columns[9]]}")
         barcode_label.grid(pady=(5,5), row=3, column=0, sticky="w", padx=(0,20))
 
         # ==========================   COURSES TABLE VIEW
@@ -104,19 +104,14 @@ class StudentPaymentView(tk.Toplevel):
                                 # ,command=lambda t=table_name, sv=search_var: self.search_table(t, sv.get()))
         search_btn.pack(side="left", padx=(10,0))
         
-        courses_table = ttk.Treeview(courses_table_frame, columns=['Name','Remaining','Date'], show="headings")
-        courses_table.heading('Name', text='Name')
+        courses_table = ttk.Treeview(courses_table_frame, columns=['Course Name','Remaining','Date'], show="headings")
+        courses_table.heading('Course Name', text='Name')
         courses_table.heading('Remaining', text='Remaining')
         courses_table.heading('Date', text='Enrolled At')
         courses_table.pack(fill="both", expand=True, padx=(10,10), pady=(0,5))
 
-        # insert random records
-        course_vals = [
-            ("Pathology", "800 EGP", "2025-09-11"),
-            ("Biochemistry", "950 EGP", "2025-09-12"),
-            ("Microbiology", "700 EGP", "2025-09-13"),
-            ("Pharmacology", "850 EGP", "2025-09-14")
-        ]
+        # insert enrolled courses records
+        course_vals = select.select_for_course_payment_table(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
         for record in course_vals:
             courses_table.insert("", "end", values=record)
 
@@ -182,18 +177,22 @@ class StudentPaymentView(tk.Toplevel):
                                 # ,command=lambda t=table_name, sv=payment_search_var: self.search_table(t, sv.get()))
         payment_search_btn.pack(side="left", padx=(10,0))
 
-        payments_table = ttk.Treeview(payments_table_frame, columns=['Name','Amount Paid','Total','Remaining','Date'], show="headings")
-        payments_table.heading('Name', text='Course Name')
-        payments_table.column('Name', width=150)
+        payments_table = ttk.Treeview(payments_table_frame, columns=['Course Name' ,'Amount Paid', 'Payment Type', 'Total', 'Transaction Date'], show="headings")
+        payments_table.heading('Course Name', text='Course Name')
+        payments_table.column('Course Name', width=150)
         payments_table.heading('Amount Paid', text='Amount Paid')
         payments_table.column('Amount Paid', width=80)
+        payments_table.heading('Payment Type', text='Payment Type')
+        payments_table.column('Payment Type', width=80)
         payments_table.heading('Total', text='Total')
         payments_table.column('Total', width=80)
-        payments_table.heading('Remaining', text='Remaining')
-        payments_table.column('Remaining', width=80)
-        payments_table.heading('Date', text='Transaction Date')
-        payments_table.column('Date', width=130)
+        payments_table.heading('Transaction Date', text='Transaction Date')
+        payments_table.column('Transaction Date', width=130)
         payments_table.pack(fill="both", expand=True, padx=(10,10), pady=(0,10))
+
+        transaction_vals = select.select_for_student_transactions(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
+        for record in transaction_vals:
+            payments_table.insert("", "end", values=record)
 
         # ==========================   SHOW/HIDE Animation
         def show_payment_operation_table():

@@ -40,3 +40,41 @@ def select_by_id(database, table_name, ID):
     cursor.execute(query)
     database.commit()
     return cursor
+
+
+# select all enrolled courses with their remaining amount and date of enrollment
+def select_for_course_payment_table(database, ID):
+    query = f"""
+        SELECT 
+            c.course_name AS 'Course Name', 
+            (c.course_price - IFNULL((
+                SELECT SUM(p.amount_paid)
+                FROM payments p
+                WHERE p.student_course_id = c.id
+            ), 0)) AS Remaining,
+            c.enrollment_date AS 'Date'
+        FROM student_course c
+        WHERE c.student_id = {ID};
+    """
+    cursor = database.cursor()
+    cursor.execute(query)
+    database.commit()
+    return cursor
+
+def select_for_student_transactions(database, ID):
+    query = f"""
+        SELECT 
+            sc.course_name AS 'Course Name', 
+            p.amount_paid AS 'Amount Paid', 
+            p.payment_type AS 'Payment Type', 
+            sc.course_price AS 'Total',
+            p.payment_date AS 'Transaction Date'
+        FROM students s
+        JOIN student_course sc ON s.id = sc.student_id
+        JOIN payments p ON p.student_course_id = sc.id
+        WHERE s.id = {ID};
+    """
+    cursor = database.cursor()
+    cursor.execute(query)
+    database.commit()
+    return cursor

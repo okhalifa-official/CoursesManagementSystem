@@ -5,10 +5,10 @@ CREATE TABLE students (
     gender VARCHAR(8),
     country_code VARCHAR(5) NOT NULL,
     phone_number VARCHAR(15) NOT NULL,
-    university TEXT NOT NULL,
-    barcode VARCHAR(20) NULL,
+    address TEXT NULL,
     email TEXT NULL,
-    address TEXT NULL
+    university TEXT NOT NULL,
+    barcode VARCHAR(20) NULL
 );
 
 CREATE TABLE doctors (
@@ -51,6 +51,7 @@ CREATE TABLE payments (
     student_id INTEGER,
     student_course_id INTEGER,
     payment_date DATE,
+    payment_type TEXT,
     amount_paid INTEGER,
     FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
     FOREIGN KEY (student_course_id) REFERENCES student_course(id) ON DELETE CASCADE
