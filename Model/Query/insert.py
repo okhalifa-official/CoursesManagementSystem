@@ -7,3 +7,8 @@ def insert(database, table, values):
 
         database.cursor().execute(query, values)
         database.commit()
+
+def confirm_payment(database, student_id, course_name, paid, payment_type, date):
+        query = f"""
+                INSERT INTO payments ()
+        """

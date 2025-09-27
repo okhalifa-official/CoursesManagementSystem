@@ -51,10 +51,15 @@ def select_for_course_payment_table(database, ID):
                 SELECT SUM(p.amount_paid)
                 FROM payments p
                 WHERE p.student_course_id = c.id
-            ), 0)) AS Remaining,
+            ), 0)) || ' EGP' AS Remaining,
             c.enrollment_date AS 'Date'
         FROM student_course c
-        WHERE c.student_id = {ID};
+        WHERE c.student_id = {ID}
+        AND (c.course_price - IFNULL((
+            SELECT SUM(p.amount_paid)
+            FROM payments p
+            WHERE p.student_course_id = c.id
+        ), 0)) > 0;
     """
     cursor = database.cursor()
     cursor.execute(query)
@@ -65,14 +70,30 @@ def select_for_student_transactions(database, ID):
     query = f"""
         SELECT 
             sc.course_name AS 'Course Name', 
-            p.amount_paid AS 'Amount Paid', 
+            p.amount_paid || ' EGP' AS 'Amount Paid', 
             p.payment_type AS 'Payment Type', 
-            sc.course_price AS 'Total',
+            sc.course_price || ' EGP' AS 'Total',
             p.payment_date AS 'Transaction Date'
         FROM students s
         JOIN student_course sc ON s.id = sc.student_id
         JOIN payments p ON p.student_course_id = sc.id
-        WHERE s.id = {ID};
+        WHERE s.id = {ID}
+        ORDER BY p.payment_date DESC;
+    """
+    cursor = database.cursor()
+    cursor.execute(query)
+    database.commit()
+    return cursor
+
+def select_unregistered_courses(database, ID):
+    query = f"""
+        SELECT c.name AS 'Course Name', c.price
+        FROM courses c
+        WHERE c.id NOT IN (
+            SELECT sc.course_id
+            FROM student_course sc
+            WHERE sc.student_id = {ID}
+        );
     """
     cursor = database.cursor()
     cursor.execute(query)

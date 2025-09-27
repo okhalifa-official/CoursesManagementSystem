@@ -18,19 +18,32 @@ SELECT
         SELECT SUM(p.amount_paid)
         FROM payments p
         WHERE p.student_course_id = c.id
-    ), 0)) AS Remaining,
+    ), 0)) || ' EGP' AS Remaining,
     c.enrollment_date AS 'Date'
 FROM student_course c
-JOIN students s ON c.student_id = s.id;
+JOIN students s ON c.student_id = s.id
+WHERE (c.course_price - IFNULL((
+            SELECT SUM(p.amount_paid)
+            FROM payments p
+            WHERE p.student_course_id = c.id
+        ), 0)) > 0;
 
 
 SELECT 
     sc.course_name AS 'Course Name', 
-    p.amount_paid AS 'Amount Paid', 
+    p.amount_paid || ' EGP' AS 'Amount Paid', 
     p.payment_type AS 'Payment Type', 
-    sc.course_price AS 'Total',
+    sc.course_price || ' EGP' AS 'Total',
     p.payment_date AS 'Transaction Date'
 FROM students s
 JOIN student_course sc ON s.id = sc.student_id
 JOIN payments p ON p.student_course_id = sc.id
 WHERE s.id = 1;
+
+SELECT c.name AS 'Course Name'
+FROM courses c
+WHERE c.id NOT IN (
+    SELECT sc.course_id
+    FROM student_course sc
+    WHERE sc.student_id = 1
+);

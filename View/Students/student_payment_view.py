@@ -5,11 +5,13 @@ from PIL import Image, ImageTk
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Controller'))
 from DataModel import Student
 import DataArchitecture as DataArch
 import Router.route as _r
-from Query import select
+from Query import select, insert
 import DB
+from Controller import DataController
 
 
 class StudentPaymentView(tk.Toplevel):
@@ -111,9 +113,13 @@ class StudentPaymentView(tk.Toplevel):
         courses_table.pack(fill="both", expand=True, padx=(10,10), pady=(0,5))
 
         # insert enrolled courses records
-        course_vals = select.select_for_course_payment_table(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
-        for record in course_vals:
-            courses_table.insert("", "end", values=record)
+        def reload_enrollment_table():
+            courses_table.delete(*courses_table.get_children())
+            course_vals = select.select_for_course_payment_table(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
+            for record in course_vals:
+                courses_table.insert("", "end", values=record)
+        
+        reload_enrollment_table()
 
         enroll_new_course_btn = ttk.Button(courses_table_frame, text='Enroll in new course')
         enroll_new_course_btn.pack(side="right", padx=(10,10), pady=(0,5))
@@ -121,6 +127,7 @@ class StudentPaymentView(tk.Toplevel):
         # ==========================   PAYMENT TABLE VIEW
         payment_operation_table = ttk.Labelframe(right_stack, text="Payment Details")
         payment_operation_table.pack(side="top", fill="both", expand=True, pady=(5,0))
+        
         payment_operation_elements_frame = ttk.Frame(payment_operation_table)
         payment_operation_elements_frame.pack(fill="both", expand=True)
         payment_operation_elements_frame.grid_columnconfigure(0, weight=1)
@@ -156,8 +163,8 @@ class StudentPaymentView(tk.Toplevel):
         for ent in payment_entries:
             ent.pack(fill="x")
         
-        self.cname = ttk.Label(payment_entries[0], text="Pathology")
-        self.remAmount = ttk.Label(payment_entries[1], text="800 EGP")
+        self.cname = ttk.Label(payment_entries[0], text="---")
+        self.remAmount = ttk.Label(payment_entries[1], text="---")
         self.cname.pack(anchor="center")
         self.remAmount.pack(anchor="center")
 
@@ -190,16 +197,26 @@ class StudentPaymentView(tk.Toplevel):
         payments_table.column('Transaction Date', width=130)
         payments_table.pack(fill="both", expand=True, padx=(10,10), pady=(0,10))
 
-        transaction_vals = select.select_for_student_transactions(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
-        for record in transaction_vals:
-            payments_table.insert("", "end", values=record)
-
+        def reload_transaction():
+            transaction_vals = select.select_for_student_transactions(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
+            payments_table.delete(*payments_table.get_children())
+            for record in transaction_vals:
+                payments_table.insert("", "end", values=record)
+        
+        reload_transaction()
+        
+        payment_operation_table.pack_forget()
         # ==========================   SHOW/HIDE Animation
         def show_payment_operation_table():
+            print("SHOW payment_operation_table")
             payment_operation_table.pack(side="top", fill="both", expand=True, pady=(5,0))
         
         def hide_payment_operation_table():
+            print("HIDE payment_operation_table")
             payment_operation_table.pack_forget()
+
+        def did_select_course(event):
+            update_payment_with_selected(event)
 
         def update_payment_with_selected(event):
             selected = courses_table.selection()
@@ -213,15 +230,73 @@ class StudentPaymentView(tk.Toplevel):
                 self.cname.pack(anchor="center")
                 self.remAmount.pack(anchor="center")
 
+        def on_course_combobox_selected(event):
+            selected_course = self.cname.get()
+            course_name_only = selected_course.split(' - ')[0]
+            # Do something with selected_course, e.g., update remaining amount, etc.
+            print("Selected course:", course_name_only)
+            try:
+                price_str = selected_course.split('-')[-1].strip()  # e.g., "4000 EGP"
+            except Exception:
+                price_str = "---"
+            self.remAmount.destroy()
+            self.remAmount = ttk.Label(payment_entries[1], text=price_str)
+            self.remAmount.pack(anchor="center")
+            # remove price from course name
+            self.cname.set(course_name_only)
+
         def change_course_to_combobox():
             show_payment_operation_table()
             self.cname.destroy()
-            self.cname = ttk.Combobox(payment_entries[0], textvariable="Course", values=["Anatomy", "Physiology", "Histology", "Genetics"], state="readonly")
+            unregistered_courses = select.select_unregistered_courses(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
+            unregistered_course_names = [c[0]+" - "+str(c[1])+" EGP" for c in unregistered_courses]
+            self.cname = ttk.Combobox(payment_entries[0], textvariable="Course", values=unregistered_course_names, state="readonly")
             self.cname.pack(anchor="center", fill="x")
+            self.cname.bind("<<ComboboxSelected>>", on_course_combobox_selected)
+
+        def confirm_payment():
+            # Get selected course name from the combobox or label
+            if isinstance(self.cname, ttk.Combobox):
+                course_name = self.cname.get().split(' - ')[0]
+            else:
+                course_name = self.cname.cget("text")
+            self.entry['Course Name'] = course_name
+
+            # Get remaining amount from the label
+            if isinstance(self.remAmount, ttk.Label):
+                remaining_amount = self.remAmount.cget("text")
+            else:
+                remaining_amount = "---"
+            self.entry['Remaining Amount'] = remaining_amount[:-4]
+
+            # Get payment type from combobox
+            payment_type = payment_entries[2].get()
+            self.entry['Payment Type'] = payment_type
+
+            # Get paid amount from entry
+            paid_amount = payment_entries[3].get()
+            self.entry['Paid Amount'] = paid_amount
+
+            # Get transaction date from DateEntry
+            transaction_date = payment_entries[4].get_date()
+            self.entry['Transaction Date'] = transaction_date.strftime("%Y-%m-%d")
+
+            # You can now use self.entry to insert the payment into the database or further processing
+            print("Payment Entry:", self.entry)
+            sID = student._student_data[student._student_columns[0]]
+            cName = self.entry['Course Name']
+            paid = self.entry['Paid Amount']
+            pay_type = self.entry['Payment Type']
+            tran_date = self.entry['Transaction Date']
+            DataController.confirm_payment(sID, cName, paid, pay_type, tran_date)
+            hide_payment_operation_table()
+            reload_enrollment_table()
+            reload_transaction()
 
         enroll_new_course_btn.config(command=change_course_to_combobox)
+        confirm_payment_btn.config(command=confirm_payment)
         search_btn.config(command=hide_payment_operation_table)
-        courses_table.bind("<<TreeviewSelect>>", update_payment_with_selected)
+        courses_table.bind("<<TreeviewSelect>>", did_select_course)
 
     def view(self):
         self.lift()

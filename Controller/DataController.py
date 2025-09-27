@@ -17,3 +17,80 @@ def load_data(table_name):
         return None
     rows = cursor.fetchall()
     return rows
+
+def is_student_enrolled_to(sID, course_name):
+    query = """
+        SELECT 1 FROM student_course
+        WHERE student_id = ? AND course_name = ?
+        LIMIT 1
+    """
+    cursor = database.cursor()
+    cursor.execute(query, (sID, course_name))
+    result = cursor.fetchone()
+    return result is not None
+
+def enroll_student_to_course(sID, course_name):
+    # Get course info
+    cursor = database.cursor()
+    cursor.execute("""
+        SELECT id, doctor_id, price, start_date, end_date
+        FROM courses
+        WHERE name = ?
+        LIMIT 1
+    """, (course_name,))
+    course = cursor.fetchone()
+
+    if not course:
+        print(f"Course '{course_name}' not found.")
+        return False
+
+    course_id, doctor_id, course_price, course_start_date, course_end_date = course
+
+    # Insert into student_course
+    cursor.execute("""
+        INSERT INTO student_course (
+            student_id, doctor_id, course_name, course_price,
+            course_start_date, course_end_date, enrollment_date, course_id
+        ) VALUES (?, ?, ?, ?, ?, ?, DATE('now'), ?)
+    """, (
+        sID, doctor_id, course_name, course_price,
+        course_start_date, course_end_date, course_id
+    ))
+    database.commit()
+    return True
+
+def add_new_apyment(sID, course_name, paid, pay_type, date):
+    cursor = database.cursor()
+    # Get the student_course id for this student and course
+    cursor.execute("""
+        SELECT id FROM student_course
+        WHERE student_id = ? AND course_name = ?
+        ORDER BY id DESC LIMIT 1
+    """, (sID, course_name))
+    result = cursor.fetchone()
+    if not result:
+        print("Student is not enrolled in this course.")
+        return False
+    student_course_id = result[0]
+
+    # Insert the payment
+    cursor.execute("""
+        INSERT INTO payments (student_id, student_course_id, payment_date, payment_type, amount_paid)
+        VALUES (?, ?, ?, ?, ?)
+    """, (sID, student_course_id, date, pay_type, paid))
+    database.commit()
+    return True
+
+def confirm_payment(sID, course_name, paid, pay_type, date):
+    # check if is already enrolled
+    if not is_student_enrolled_to(sID, course_name):
+        # enroll student to course
+        if enroll_student_to_course(sID, course_name):
+            print("enrolled successfully!")
+        else:
+            print("error enrolling student to course!")
+            return
+
+    # pay amount to student_course table
+    add_new_apyment(sID, course_name, paid, pay_type, date)
+    
