@@ -27,6 +27,7 @@ class CoursesApp(tk.Tk):
         # Tables Definitions
         self.tables = {}
         self.action_btns_frame = {}
+        self.btn_frame = {}
         self.edit_btn = {}
         
         # import definition object from Model
@@ -83,11 +84,11 @@ class CoursesApp(tk.Tk):
             self.tables[table_name] = tree
 
             # Build frame for buttons inside the Tab View
-            btn_frame = ttk.Frame(tab)
-            btn_frame.pack(fill="x")
+            self.btn_frame[table_name] = ttk.Frame(tab)
+            self.btn_frame[table_name].pack(fill="x")
 
             # Create Add Button (When pressed, open add button Dialog from Controller)
-            report_btn = ttk.Button(btn_frame, text=f"Report",
+            report_btn = ttk.Button(self.btn_frame[table_name], text=f"Report",
                                  command=lambda t=table_name, f=col_name
                                  : self.add_item(t, f))
             
@@ -97,6 +98,10 @@ class CoursesApp(tk.Tk):
         self.payment_btn = ttk.Button(self.action_btns_frame['students'],
                                 text=f"Add Payment",
                                 command=lambda t='students': self.payment_btn_pressed(t))
+        self.attendance_btn = ttk.Button(self.btn_frame['courses'],
+                                text=f"Record Attendance",
+                                command=lambda t='courses': self.attendance_btn_pressed(t))
+        self.search_student_entry = ttk.Entry(self.btn_frame['courses'])
 
 
         # Bind tab change event to update current_node
@@ -132,6 +137,9 @@ class CoursesApp(tk.Tk):
             elif table_name == 'doctors':
                 self.selected_obj[table_name] = DataModel.Doctor(row_data[0])
             elif table_name == 'courses':
+                self.search_student_entry.pack(side="left", padx=5)
+                self.attendance_btn.config(command=lambda t='courses': self.attendance_btn_pressed(t))
+                self.attendance_btn.pack(side='left', padx=5)
                 self.selected_obj[table_name] = DataModel.Course(row_data[0])
         else:
             self.edit_btn[table_name].pack_forget()
@@ -156,20 +164,6 @@ class CoursesApp(tk.Tk):
             # Fetch results to the table view
             for r in rows:
                 self.tables[table].insert("", "end", values=r)
-                # Fetch values to Objects array
-                # if table.lower() == "students":
-                #     student = DataModel.Student(r)
-                #     DataModel.Students.append(student)
-                # elif table.lower() == "doctors":
-                #     doctor = DataModel.Doctor(r)
-                #     DataModel.Doctors.append(doctor)
-                # elif table.lower() == "courses":
-                #     course = DataModel.Course(r)
-                #     DataModel.Courses.append(course)
-        print(DataModel.Students)
-
-    def add_item(self, table, fields):
-        AddDialog.AddDialog(self, table, lambda: self.load_all_data())
     
     def delete_selected(self, table):
         tree = self.tables[table]
@@ -217,23 +211,14 @@ class CoursesApp(tk.Tk):
     def edit_btn_pressed(self, table_name):
         print("edit")
         if table_name == 'students':
-            # from Model.DataModel import Student
-            # student = Student()
-            # student.load_fake_data()
             from View.Students.student_edit_view import StudentEditView
             new_student_view = StudentEditView(self,self.selected_obj[table_name])
             _r.route(current=self, to=new_student_view)
         elif table_name == 'courses':
-            # from Model.DataModel import Course
-            # course = Course()
-            # course.load_fake_data()
             from View.Courses.course_edit_view import CourseEditView
             new_course_view = CourseEditView(self,self.selected_obj[table_name])
             _r.route(current=self, to=new_course_view)
         elif table_name == 'doctors':
-            # from Model.DataModel import Doctor
-            # doctor = Doctor()
-            # doctor.load_fake_data()
             from View.Doctors.doctor_edit_view import DoctorEditView
             new_doctor_view = DoctorEditView(self,self.selected_obj[table_name])
             _r.route(current=self, to=new_doctor_view)
@@ -241,13 +226,12 @@ class CoursesApp(tk.Tk):
 
     def payment_btn_pressed(self, table_name):
         print("payment")
-        # from Model.DataModel import Student
-        # student = Student()
-        # student.load_fake_data()
         from View.Students.student_payment_view import StudentPaymentView
         new_student_view = StudentPaymentView(self,self.selected_obj[table_name])
         _r.route(current=self, to=new_student_view)
-        #_r.route(table_name, to="edit")
+
+    def attendance_btn_pressed(self, table_name):
+        print("attendance pressed")
 
     def view(self):
         self.lift()           # Bring window to front
