@@ -27,7 +27,9 @@ class CoursesApp(tk.Tk):
         # Tables Definitions
         self.tables = {}
         self.action_btns_frame = {}
-        self.btn_frame = {}
+        self.tail_frame = {}
+        self.tail_left = {}
+        self.tail_right = {}
         self.edit_btn = {}
         
         # import definition object from Model
@@ -84,24 +86,34 @@ class CoursesApp(tk.Tk):
             self.tables[table_name] = tree
 
             # Build frame for buttons inside the Tab View
-            self.btn_frame[table_name] = ttk.Frame(tab)
-            self.btn_frame[table_name].pack(fill="x")
+            self.tail_frame[table_name] = ttk.Frame(tab)
+            self.tail_frame[table_name].pack(fill="x")
+
+            self.tail_left[table_name] = ttk.Frame(self.tail_frame[table_name])
+            self.tail_left[table_name].pack(side='left', fill="x", expand=True, padx=5, pady=5)
+
+            # Temp frame (empty space) => divide to 3 portions
+            center_frame = ttk.Frame(self.tail_frame[table_name])
+            center_frame.pack(side='left', fill="x", expand=True, padx=5, pady=5)
+
+            self.tail_right[table_name] = ttk.Frame(self.tail_frame[table_name])
+            self.tail_right[table_name].pack(side='right', fill="x", expand=True, padx=5, pady=5)
 
             # Create Add Button (When pressed, open add button Dialog from Controller)
-            report_btn = ttk.Button(self.btn_frame[table_name], text=f"Report",
+            report_btn = ttk.Button(self.tail_right[table_name], text=f"Report",
                                  command=lambda t=table_name, f=col_name
                                  : self.add_item(t, f))
             
             # Style Buttons
-            report_btn.pack(side="right", padx=5, pady=5)
+            report_btn.pack(side="right")
 
         self.payment_btn = ttk.Button(self.action_btns_frame['students'],
                                 text=f"Add Payment",
                                 command=lambda t='students': self.payment_btn_pressed(t))
-        self.attendance_btn = ttk.Button(self.btn_frame['courses'],
+        self.attendance_btn = ttk.Button(self.tail_left['courses'],
                                 text=f"Record Attendance",
                                 command=lambda t='courses': self.attendance_btn_pressed(t))
-        self.search_student_entry = ttk.Entry(self.btn_frame['courses'])
+        self.search_student_entry = ttk.Entry(self.tail_left['courses'])
 
 
         # Bind tab change event to update current_node
@@ -137,9 +149,9 @@ class CoursesApp(tk.Tk):
             elif table_name == 'doctors':
                 self.selected_obj[table_name] = DataModel.Doctor(row_data[0])
             elif table_name == 'courses':
-                self.search_student_entry.pack(side="left", padx=5)
+                self.search_student_entry.pack(side="left", padx=(0,15), fill="x", expand=True)
                 self.attendance_btn.config(command=lambda t='courses': self.attendance_btn_pressed(t))
-                self.attendance_btn.pack(side='left', padx=5)
+                self.attendance_btn.pack(side='left')
                 self.selected_obj[table_name] = DataModel.Course(row_data[0])
         else:
             self.edit_btn[table_name].pack_forget()
