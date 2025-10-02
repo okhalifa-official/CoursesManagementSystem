@@ -99,3 +99,19 @@ def select_unregistered_courses(database, ID):
     cursor.execute(query)
     database.commit()
     return cursor
+
+def select_doctors(database, *columns):
+    selected_columns = ""
+    for i,col in enumerate(columns):
+        selected_columns += col
+        if len(columns)-i-1:
+            selected_columns += ", "
+
+    query = f"""
+    SELECT {selected_columns}
+    FROM doctors;
+    """
+    cursor = database.cursor()
+    cursor.execute(query)
+    database.commit()
+    return cursor

@@ -19,6 +19,7 @@ class DoctorAddView(tk.Toplevel):
         elements = DataArch.add_doctor_elements
         placeholder = DataArch.add_doctor_elements_placeholders
         self.entry = {}
+        self.data = {}
 
         def back_btn_pressed():
             _r.route_back(self)
@@ -80,11 +81,25 @@ class DoctorAddView(tk.Toplevel):
                         entry_widget.bind("<FocusOut>", on_focus_out)
                         self.entry[label_text] = entry_widget
                 #print(values)
-        def create_student():
-            print("hello world")
+
+        def create_doctor():
+            # store all new doctor data in self.data{}
+            for key, widget in self.entry.items():
+                # Handle different widget types
+                if isinstance(widget, ttk.Entry):
+                    value = widget.get()
+                elif isinstance(widget, tk.StringVar):
+                    value = widget.get()
+                elif isinstance(widget, ttk.Radiobutton):
+                    # For radiobuttons, get the value from the associated StringVar
+                    continue  # Skip individual radiobuttons, use the StringVar stored with the group label
+                else:
+                    value = widget
+                self.data[key] = value
+            print(self.data)
         
         create_btn = ttk.Button(vertical_stack, text="Create",
-                               command=create_student)
+                               command=create_doctor)
         create_btn.pack(side="top", pady=25, anchor="center")
     
     def view(self):

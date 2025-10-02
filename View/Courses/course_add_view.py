@@ -6,6 +6,7 @@ import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 import DataArchitecture as DataArch
 import Router.route as _r
+from Controller import DataController
 
 
 class CourseAddView(tk.Toplevel):
@@ -18,8 +19,11 @@ class CourseAddView(tk.Toplevel):
         
     def load(self):
         elements = DataArch.add_course_elements
+        doctors_name, doctors_id = DataController.get_doctors_names_id()
+        # print(doctors_name, doctors_id)
         placeholder = DataArch.add_course_elements_placeholders
         self.entry = {}
+        self.data = {}
 
         def back_btn_pressed():
             _r.route_back(self)
@@ -94,7 +98,7 @@ class CourseAddView(tk.Toplevel):
                             self.entry[option].grid(row=0, column=i, padx=20)
                         self.entry[label_text] = radio_var
                     case 'combo_box':
-                        entry_widget = ttk.Combobox(fields_frame, textvariable=placeholder[label_text], values=["Dr. James Bond", "Dr. Marshmallow", "Dr. Green"], state="readonly")
+                        entry_widget = ttk.Combobox(fields_frame, textvariable=placeholder[label_text], values=doctors_name, state="readonly")
                         entry_widget.grid(row=r, column=1, padx=20)
                         self.entry[label_text] = entry_widget
                     case 'date':
@@ -120,7 +124,23 @@ class CourseAddView(tk.Toplevel):
                 #print(values)
 
         def create_course():
-            print("hello world")
+            # store all new course data in self.data{}
+            for key, widget in self.entry.items():
+                # Handle different widget types
+                if isinstance(widget, ttk.Combobox):
+                    # get the id of selected doctor
+                    index = widget.current()
+                    print(index)
+                    value = doctors_id[index]
+                elif isinstance(widget, ttk.Entry):
+                    value = widget.get()
+                elif isinstance(widget, tk.StringVar):
+                    value = widget.get()
+                elif isinstance(widget, DateEntry):
+                    value = widget.get_date().strftime("%Y-%m-%d")
+                self.data[key] = value
+            
+            # print(self.data)
         
         create_btn = ttk.Button(right_vertical_stack, text="Create",
                     command=create_course)

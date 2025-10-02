@@ -94,3 +94,15 @@ def confirm_payment(sID, course_name, paid, pay_type, date):
     # pay amount to student_course table
     add_new_apyment(sID, course_name, paid, pay_type, date)
     
+def get_full_name(fname, lname):
+    return fname + " " + lname
+
+def get_doctors_names_id():
+    doctors = select.select_doctors(database, "id", "first_name", "last_name").fetchall()
+    names = []
+    ids = []
+    for rec in doctors:
+        names.append(get_full_name(rec[1], rec[2]))
+        ids.append(rec[0])
+
+    return names,ids
