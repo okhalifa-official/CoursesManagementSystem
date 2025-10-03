@@ -26,7 +26,6 @@ class DoctorEditView(tk.Toplevel):
 
         def back_btn_pressed():
             _r.route_back(self)
-            print("Hello")
 
         back_btn = ttk.Button(self, text="Back",
                     command=back_btn_pressed)

@@ -7,6 +7,7 @@ import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from DataModel import Course
+from Controller import DataController
 import DataArchitecture as DataArch
 import Router.route as _r
 
@@ -23,12 +24,12 @@ class CourseEditView(tk.Toplevel):
     def load(self):
         course = self.course
         elements = DataArch.add_course_elements
+        doctors_name, doctors_id = DataController.get_doctors_names_id()
         placeholder = DataArch.add_course_elements_placeholders
         self.entry = {}
 
         def back_btn_pressed():
             _r.route_back(self)
-            print("Hello")
 
         back_btn = ttk.Button(self, text="Back",
                     command=back_btn_pressed)
@@ -120,9 +121,15 @@ class CourseEditView(tk.Toplevel):
                             self.entry[option].grid(row=0, column=i, padx=20)
                         self.entry[label_text] = radio_var
                     case 'combo_box':
-                        entry_widget = ttk.Combobox(fields_frame, textvariable=placeholder[label_text], values=["Dr. James Bond", "Dr. Marshmallow", "Dr. Green"], state="readonly")
+                        entry_widget = ttk.Combobox(fields_frame, textvariable=placeholder[label_text], values=doctors_name, state="readonly")
                         entry_widget.grid(row=r, column=1, padx=20)
-                        entry_widget.set(course._course_data[label_text])
+                        # Find the index of the doctor ID and set the corresponding name
+                        doctor_id = course._course_data[label_text]
+                        if doctor_id in doctors_id:
+                            idx = doctors_id.index(doctor_id)
+                            entry_widget.set(doctors_name[idx])
+                        else:
+                            entry_widget.set(doctor_id)  # a default value
                         self.entry[label_text] = entry_widget
                     case 'date':
                         entry_widget = DateEntry(fields_frame, state="readonly", foreground="white", background="grey", bordercolor="black", headersbackground="white", headersforeground="grey", normalbackground="white", normalforeground="white", weekendbackground="grey", weekendforeground="white", selectbackground="black", selectforeground="yellow")

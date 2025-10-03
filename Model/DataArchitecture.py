@@ -28,7 +28,7 @@ columns = [
     [
         "id",
         "name",
-        "doctor_id",
+        "doctor_name",
         "price",
         "start_date",
         "end_date"

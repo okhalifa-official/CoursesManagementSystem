@@ -9,9 +9,12 @@ from Model.Query import select
 database = db()
 
 def load_data(table_name):
-    tables_relations = [(table_name, '')]
     try:
-        cursor = select.select(database, tables_relations)
+        if table_name == 'courses':
+            relation = [['doctors', 'doctor_id = doctors.id']]
+            cursor = select.select(database, table_name, relation, "courses.id AS id", "name", "doctors.first_name || ' ' || doctors.last_name AS doctor_name", "price", "start_date", "end_date")
+        else:
+            cursor = select.select(database, table_name)
     except Exception as error:
         print(f"Failed loading data: {error}")
         return None

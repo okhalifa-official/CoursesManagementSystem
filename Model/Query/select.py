@@ -13,17 +13,32 @@ def student_select_special(database):
     database.commit()
     return cursor
 
-def select(database, table_relation):
-    #table_relation = [('students', 'id'), ('courses', 'student_id')]
+def select(database, table_name, relations=[], *columns):
+    keys = table_name
+    conditions = ""
+    for i, relation in enumerate(relations):
+        if i == 0:
+            conditions = "WHERE "
+        keys += ", "
+        keys += relation[0]
+        conditions += relation[1]
+        if len(relations)-i-1:
+            relation += ", "
+    selected_columns = ""
+    for i,col in enumerate(columns):
+        selected_columns += col
+        if len(columns)-i-1:
+            selected_columns += ", "
+    
+    if selected_columns == "":
+        selected_columns = "*"
+
     query = f"""
-        SELECT *
-        FROM {table_relation[0][0]}
+        SELECT {selected_columns}
+        FROM {keys}
+        {conditions};
     """
-    for i in range(1,len(table_relation)):
-        query += f"""
-            JOIN {table_relation[i][0]}
-            ON {table_relation[i-1][0]}.{table_relation[i-1][1]} = {table_relation[i][0]}.{table_relation[i][1]}
-        """
+    print(query)
     cursor = database.cursor()
     cursor.execute(query)
     database.commit()
