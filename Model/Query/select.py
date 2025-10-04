@@ -38,7 +38,7 @@ def select(database, table_name, relations=[], *columns):
         FROM {keys}
         {conditions};
     """
-    print(query)
+    # print(query)
     cursor = database.cursor()
     cursor.execute(query)
     database.commit()

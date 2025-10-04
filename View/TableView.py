@@ -246,6 +246,7 @@ class CoursesApp(tk.Tk):
         print("attendance pressed")
 
     def view(self):
+        self.load_all_data()
         self.lift()           # Bring window to front
         self.focus_force()    # Force focus to window
         self.attributes('-topmost', True)  # Temporarily set as topmost

@@ -96,6 +96,20 @@ def confirm_payment(sID, course_name, paid, pay_type, date):
 
     # pay amount to student_course table
     add_new_apyment(sID, course_name, paid, pay_type, date)
+
+def add_new_student(fname, lname, gender, country, phone, address=None, email=None, university=None, barcode=None):
+    cursor = database.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO students (first_name, last_name, gender, country_code, phone_number, address, email, university, barcode)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (fname, lname, gender, country, phone, address, email, university, barcode))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed creating new student: {error}")
+        return False
+
     
 def get_full_name(fname, lname):
     return fname + " " + lname

@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 import DataArchitecture as DataArch
+from Controller import DataController
 import Router.route as _r
 
 
@@ -111,6 +112,9 @@ class StudentAddView(tk.Toplevel):
         def create_student():
             # store all new doctor data in self.data{}
             for key, widget in self.entry.items():
+                # skip image --- just for testing (fix later)
+                if key == 'Student Image':
+                    continue
                 # Handle different widget types
                 if isinstance(widget, ttk.Entry):
                     value = widget.get()
@@ -121,8 +125,25 @@ class StudentAddView(tk.Toplevel):
                     continue  # Skip individual radiobuttons, use the StringVar stored with the group label
                 else:
                     value = widget
-                self.data[key] = value
+                self.data[key] = None
+                try:
+                    if value != placeholder[key]:
+                        self.data[key] = value
+                except KeyError:
+                    self.data[key] = value
             print(self.data)
+            if DataController.add_new_student(
+                fname=self.data['first_name'],
+                lname=self.data['last_name'],
+                gender=self.data['gender'],
+                country=self.data['country_code'],
+                phone=self.data['phone_number'],
+                email=self.data['email'],
+                address=self.data['address'],
+                university=self.data['university'],
+                barcode=self.data['barcode']
+            ):
+                back_btn_pressed()
         
         create_btn = ttk.Button(vertical_stack, text="Create",
                                command=create_student)
