@@ -214,7 +214,7 @@ class CoursesApp(tk.Tk):
             new_course_view = CourseAddView(self)
             _r.route(current=self, to=new_course_view)
         elif table_name == 'doctors':
-            print('course')
+            print('doctor')
             from View.Doctors.doctor_add_view import DoctorAddView
             new_doctor_view = DoctorAddView(self)
             _r.route(current=self, to=new_doctor_view)

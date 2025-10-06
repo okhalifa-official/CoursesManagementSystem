@@ -109,7 +109,130 @@ def add_new_student(fname, lname, gender, country, phone, address=None, email=No
     except Exception as error:
         print(f"Failed creating new student: {error}")
         return False
+    
+def update_student(id, fname, lname, gender, country, phone, address, email, university, barcode):
+    cursor = database.cursor()
+    try:
+        cursor.execute("""
+            UPDATE students 
+            SET first_name = ?, last_name = ?, gender = ?, country_code = ?, 
+                phone_number = ?, address = ?, email = ?, university = ?, barcode = ?
+            WHERE id = ?
+        """, (fname, lname, gender, country, phone, address, email, university, barcode, id))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed updating student: {error}")
+        return False
+        
+def delete_student(id):
+    cursor = database.cursor()
+    try:
+        cursor.execute("""
+                        DELETE FROM students
+                        WHERE id = ?
+                       """, (id,))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed deleting student: {error}")
+        return False
+    
+def add_new_doctor(fname, lname, gender, country, phone, email=None):
+    cursor = database.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO doctors (first_name, last_name, gender, country_code, phone_number, email)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (fname, lname, gender, country, phone, email))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed creating new doctor: {error}")
+        return False
+    
+def update_doctor(id, fname, lname, gender, country, phone, email):
+    cursor = database.cursor()
+    try:
+        cursor.execute("""
+            UPDATE doctors 
+            SET first_name = ?, last_name = ?, gender = ?, country_code = ?, 
+                phone_number = ?, email = ?
+            WHERE id = ?
+        """, (fname, lname, gender, country, phone, email, id))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed updating doctor: {error}")
+        return False
+    
+def delete_doctor(id):
+    cursor = database.cursor()
+    try:
+        cursor.execute("""
+                        DELETE FROM doctors
+                        WHERE id = ?
+                       """, (id,))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed deleting doctor: {error}")
+        return False
 
+def get_id_from_name(table_name, fullname):
+    f_name,l_name = fullname.split()
+    cursor = database.cursor()
+    query = f"""
+        SELECT id
+        FROM {table_name}
+        WHERE first_name = ? and last_name = ?
+    """
+    cursor.execute(query,(f_name, l_name))
+    result = cursor.fetchone()
+    print(result)
+    return result[0]
+
+def add_new_course(name, doc_name, price, s_date, e_date):
+    docid = get_id_from_name("doctors", doc_name)
+    cursor = database.cursor()
+    try:
+        cursor.execute("""
+                       INSERT INTO courses (name, doctor_id, price, start_date, end_date)
+                       VALUES (?, ?, ?, ?, ?)
+                       """, (name, docid, price, s_date, e_date))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed creating new course: {error}")
+        return False
+    
+def update_course(id, name, doc_name, price, s_date, e_date):
+    docid = get_id_from_name("doctors", doc_name)
+    cursor = database.cursor()
+    try:
+        cursor.execute("""
+            UPDATE courses 
+            SET name = ?, doctor_id = ?, price = ?, start_date = ?, end_date = ?
+            WHERE id = ?
+        """, (name, docid, price, s_date, e_date, id))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed updating course: {error}")
+        return False
+    
+def delete_course(id):
+    cursor = database.cursor()
+    try:
+        cursor.execute("""
+                        DELETE FROM courses
+                        WHERE id = ?
+                       """, (id,))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed deleting course: {error}")
+        return False
     
 def get_full_name(fname, lname):
     return fname + " " + lname

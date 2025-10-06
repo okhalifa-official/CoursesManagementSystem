@@ -7,7 +7,7 @@ import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from DataModel import Course
-from Controller import DataController
+from Controller import DataController, PopupHandler
 import DataArchitecture as DataArch
 import Router.route as _r
 
@@ -27,6 +27,7 @@ class CourseEditView(tk.Toplevel):
         doctors_name, doctors_id = DataController.get_doctors_names_id()
         placeholder = DataArch.add_course_elements_placeholders
         self.entry = {}
+        self.data = {}
 
         def back_btn_pressed():
             _r.route_back(self)
@@ -160,10 +161,52 @@ class CourseEditView(tk.Toplevel):
                         self.entry[label_text] = entry_widget
                 #print(values)
 
-        def update_student():
+        def update_course():
             print("hello world")
-        def delete_student():
-            print("delete")
+            # store all new course data in self.data{}
+            for key, widget in self.entry.items():
+                # Handle different widget types
+                if isinstance(widget, DateEntry):
+                    value = widget.get_date().strftime("%Y-%m-%d")
+                
+                elif isinstance(widget, tk.StringVar):
+                    value = widget.get()
+                elif isinstance(widget, ttk.Radiobutton):
+                    # For radiobuttons, get the value from the associated StringVar
+                    continue  # Skip individual radiobuttons, use the StringVar stored with the group label
+                elif isinstance(widget, ttk.Entry):
+                    value = widget.get()
+                else:
+                    value = widget
+                self.data[key] = None
+                try:
+                    if value != placeholder[key]:
+                        self.data[key] = value
+                except KeyError:
+                    self.data[key] = value
+            print(self.data)
+            if DataController.update_course(
+                id=self.course._course_data[self.course._course_columns[0]],
+                name=self.data['name'],
+                doc_name=self.data['doctor_name'],
+                price=self.data['price'],
+                s_date=self.data['start_date'],
+                e_date=self.data['end_date']
+            ):
+                back_btn_pressed()
+        def delete_course():
+            # show confirmation pop_up
+            message = "Are you sure you want to delete this course?"
+            confirmation_text = "Delete"
+            result = PopupHandler.confirmation_popup(self, title="Delete Course", message=message, button1_text="Cancel", button2_text=confirmation_text)
+            if result:
+                print("delete")
+                if DataController.delete_course(
+                    id=self.course._course_data[self.course._course_columns[0]]
+                ):
+                    back_btn_pressed()
+            else:
+                print("canceled")
         
         btn_frame = ttk.Frame(right_vertical_stack)
         btn_frame.pack(fill="x", pady=25, side="bottom", anchor="center")
@@ -172,12 +215,12 @@ class CourseEditView(tk.Toplevel):
             btn_frame,
             text="Delete",
             fg='red',
-            command=delete_student
+            command=delete_course
         )
         delete_btn.grid(row=0, column=0, sticky="w")
 
         create_btn = ttk.Button(btn_frame, text="Save Changes",
-                    command=update_student)
+                    command=update_course)
         create_btn.grid(row=0, column=1, padx=30, sticky="e")
     
     def view(self):

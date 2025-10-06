@@ -126,19 +126,32 @@ class CourseAddView(tk.Toplevel):
             # store all new course data in self.data{}
             for key, widget in self.entry.items():
                 # Handle different widget types
-                if isinstance(widget, ttk.Combobox):
-                    # get the id of selected doctor
-                    index = widget.current()
-                    print(index)
-                    value = doctors_id[index]
-                elif isinstance(widget, ttk.Entry):
-                    value = widget.get()
+                if isinstance(widget, DateEntry):
+                    value = widget.get_date().strftime("%Y-%m-%d")
                 elif isinstance(widget, tk.StringVar):
                     value = widget.get()
-                elif isinstance(widget, DateEntry):
-                    value = widget.get_date().strftime("%Y-%m-%d")
-                self.data[key] = value
-            
+                elif isinstance(widget, ttk.Radiobutton):
+                    # For radiobuttons, get the value from the associated StringVar
+                    continue  # Skip individual radiobuttons, use the StringVar stored with the group label
+                elif isinstance(widget, ttk.Entry):
+                    value = widget.get()
+                else:
+                    value = widget
+                self.data[key] = None
+                try:
+                    if value != placeholder[key]:
+                        self.data[key] = value
+                except KeyError:
+                    self.data[key] = value
+            print(self.data)
+            if DataController.add_new_course(
+                name=self.data['name'],
+                doc_name=self.data['doctor_name'],
+                price=self.data['price'],
+                s_date=self.data['start_date'],
+                e_date=self.data['end_date']
+            ):
+                back_btn_pressed()
             # print(self.data)
         
         create_btn = ttk.Button(right_vertical_stack, text="Create",

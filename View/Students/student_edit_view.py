@@ -5,6 +5,7 @@ import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from DataModel import Student
+from Controller import DataController, PopupHandler
 import DataArchitecture as DataArch
 import Router.route as _r
 
@@ -23,6 +24,7 @@ class StudentEditView(tk.Toplevel):
         elements = DataArch.add_student_elements
         placeholder = DataArch.add_student_elements_placeholders
         self.entry = {}
+        self.data = {}
 
         def back_btn_pressed():
             _r.route_back(self)
@@ -140,8 +142,54 @@ class StudentEditView(tk.Toplevel):
                 #print(values)
         def update_student():
             print("hello world")
+            # store all new student data in self.data{}
+            for key, widget in self.entry.items():
+                # skip image --- just for testing (fix later)
+                if key == 'Student Image':
+                    continue
+                # Handle different widget types
+                if isinstance(widget, ttk.Entry):
+                    value = widget.get()
+                elif isinstance(widget, tk.StringVar):
+                    value = widget.get()
+                elif isinstance(widget, ttk.Radiobutton):
+                    # For radiobuttons, get the value from the associated StringVar
+                    continue  # Skip individual radiobuttons, use the StringVar stored with the group label
+                else:
+                    value = widget
+                self.data[key] = None
+                try:
+                    if value != placeholder[key]:
+                        self.data[key] = value
+                except KeyError:
+                    self.data[key] = value
+            print(self.data)
+            if DataController.update_student(
+                id=self.student._student_data[self.student._student_columns[0]],
+                fname=self.data['first_name'],
+                lname=self.data['last_name'],
+                gender=self.data['gender'],
+                country=self.data['country_code'],
+                phone=self.data['phone_number'],
+                email=self.data['email'],
+                address=self.data['address'],
+                university=self.data['university'],
+                barcode=self.data['barcode']
+            ):
+                back_btn_pressed()
         def delete_student():
-            print("delete")
+            # show confirmation pop_up
+            message = "Are you sure you want to delete the student?"
+            confirmation_text = "Delete"
+            result = PopupHandler.confirmation_popup(self, title="Delete Student", message=message, button1_text="Cancel", button2_text=confirmation_text)
+            if result:
+                print("delete")
+                if DataController.delete_student(
+                    id=self.student._student_data[self.student._student_columns[0]]
+                ):
+                    back_btn_pressed()
+            else:
+                print("canceled")
         
         btn_frame = ttk.Frame(vertical_stack)
         btn_frame.pack(side="top", pady=25, fill="x", anchor="center")

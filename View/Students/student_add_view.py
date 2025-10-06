@@ -110,7 +110,7 @@ class StudentAddView(tk.Toplevel):
                         self.entry[label_text] = entry_widget
                 #print(values)
         def create_student():
-            # store all new doctor data in self.data{}
+            # store all new student data in self.data{}
             for key, widget in self.entry.items():
                 # skip image --- just for testing (fix later)
                 if key == 'Student Image':

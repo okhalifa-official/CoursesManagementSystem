@@ -5,6 +5,7 @@ import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from DataModel import Doctor
+from Controller import DataController, PopupHandler
 import DataArchitecture as DataArch
 import Router.route as _r
 
@@ -23,6 +24,7 @@ class DoctorEditView(tk.Toplevel):
         elements = DataArch.add_doctor_elements
         placeholder = DataArch.add_doctor_elements_placeholders
         self.entry = {}
+        self.data = {}
 
         def back_btn_pressed():
             _r.route_back(self)
@@ -92,9 +94,49 @@ class DoctorEditView(tk.Toplevel):
                 #print(values)
 
         def update_doctor():
-            print("hello world")
+            # store all new doctor data in self.data{}
+            for key, widget in self.entry.items():
+                # Handle different widget types
+                if isinstance(widget, ttk.Entry):
+                    value = widget.get()
+                elif isinstance(widget, tk.StringVar):
+                    value = widget.get()
+                elif isinstance(widget, ttk.Radiobutton):
+                    # For radiobuttons, get the value from the associated StringVar
+                    continue  # Skip individual radiobuttons, use the StringVar stored with the group label
+                else:
+                    value = widget
+                self.data[key] = None
+                try:
+                    if value != placeholder[key]:
+                        self.data[key] = value
+                except KeyError:
+                    self.data[key] = value
+            print(self.data)
+            if DataController.update_doctor(
+                id=self.doctor._doctor_data[self.doctor._doctor_columns[0]],
+                fname=self.data['first_name'],
+                lname=self.data['last_name'],
+                gender=self.data['gender'],
+                country=self.data['country_code'],
+                phone=self.data['phone_number'],
+                email=self.data['email']
+            ):
+                back_btn_pressed()
+
         def delete_doctor():
-            print("delete")
+            # show confirmation pop_up
+            message = "Are you sure you want to delete this doctor?"
+            confirmation_text = "Delete"
+            result = PopupHandler.confirmation_popup(self, title="Delete Doctor", message=message, button1_text="Cancel", button2_text=confirmation_text)
+            if result:
+                print("delete")
+                if DataController.delete_doctor(
+                    id=self.doctor._doctor_data[self.doctor._doctor_columns[0]]
+                ):
+                    back_btn_pressed()
+            else:
+                print("canceled")
         
         btn_frame = ttk.Frame(vertical_stack)
         btn_frame.pack(fill="x", pady=25, side="bottom", anchor="center")
