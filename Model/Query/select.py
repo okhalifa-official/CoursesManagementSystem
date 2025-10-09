@@ -84,6 +84,7 @@ def select_for_course_payment_table(database, ID):
 def select_for_student_transactions(database, ID):
     query = f"""
         SELECT 
+            p.id AS ID,
             sc.course_name AS 'Course Name', 
             p.amount_paid || ' EGP' AS 'Amount Paid', 
             p.payment_type AS 'Payment Type', 

@@ -9,9 +9,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Controller'))
 from DataModel import Student
 import DataArchitecture as DataArch
 import Router.route as _r
-from Query import select, insert
+from Query import select, insert, delete
 import DB
-from Controller import DataController
+from Controller import DataController,PopupHandler
+from datetime import datetime
 
 
 class StudentPaymentView(tk.Toplevel):
@@ -26,6 +27,10 @@ class StudentPaymentView(tk.Toplevel):
     def load(self):
         student = self.student
         self.entry = {}
+        self.isEditingTransaction = False
+        self.paymentID = None
+        self.courses_table = None
+        self.payments_table = None
 
         def back_btn_pressed():
             _r.route_back(self)
@@ -101,22 +106,20 @@ class StudentPaymentView(tk.Toplevel):
         search_var = tk.StringVar()
         search_entry = ttk.Entry(filter_frame, textvariable=search_var)
         search_entry.pack(side="left", fill="x", expand=True)
-        search_btn = ttk.Button(filter_frame, text="Search")
-                                # ,command=lambda t=table_name, sv=search_var: self.search_table(t, sv.get()))
+        search_btn = ttk.Button(filter_frame, text="Search"
+                                 ,command=lambda t='student_course', sv=search_var: self.search_table(t, sv.get()))
         search_btn.pack(side="left", padx=(10,0))
         
-        courses_table = ttk.Treeview(courses_table_frame, columns=['Course Name','Remaining','Date'], show="headings")
-        courses_table.heading('Course Name', text='Name')
-        courses_table.heading('Remaining', text='Remaining')
-        courses_table.heading('Date', text='Enrolled At')
-        courses_table.pack(fill="both", expand=True, padx=(10,10), pady=(0,5))
+        self.course_columns = ['Course Name', 'Remaining', 'Date']
+        self.courses_table = ttk.Treeview(courses_table_frame, columns=['Course Name','Remaining','Date'], show="headings")
+        self.courses_table.heading('Course Name', text='Name')
+        self.courses_table.heading('Remaining', text='Remaining')
+        self.courses_table.heading('Date', text='Enrolled At')
+        self.courses_table.pack(fill="both", expand=True, padx=(10,10), pady=(0,5))
 
         # insert enrolled courses records
         def reload_enrollment_table():
-            courses_table.delete(*courses_table.get_children())
-            course_vals = select.select_for_course_payment_table(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
-            for record in course_vals:
-                courses_table.insert("", "end", values=record)
+            self.search_table('student_course')
         
         reload_enrollment_table()
 
@@ -167,8 +170,17 @@ class StudentPaymentView(tk.Toplevel):
         self.cname.pack(anchor="center")
         self.remAmount.pack(anchor="center")
 
-        confirm_payment_btn = ttk.Button(payment_operation_table, text="Confirm Payment")
-        confirm_payment_btn.pack(anchor="center", pady=10)
+        btn_frame = ttk.Frame(payment_operation_table)
+        btn_frame.pack(anchor="center", pady=10)
+
+        delete_trns_btn = tk.Button(
+            btn_frame,
+            text="Delete",
+            fg='red'
+        )
+        
+        confirm_payment_btn = ttk.Button(btn_frame, text="Confirm Payment")
+        confirm_payment_btn.grid(row=0, column=1, sticky="w")
 
         # ==========================   TRANSACTION TABLE VIEW
         payments_table_frame = ttk.Labelframe(right_stack, text="Transactions")
@@ -179,32 +191,33 @@ class StudentPaymentView(tk.Toplevel):
         payment_search_var = tk.StringVar()
         paymen_search_entry = ttk.Entry(payment_filter_frame, textvariable=payment_search_var)
         paymen_search_entry.pack(side="left", fill="x", expand=True)
-        payment_search_btn = ttk.Button(payment_filter_frame, text="Search")
-                                # ,command=lambda t=table_name, sv=payment_search_var: self.search_table(t, sv.get()))
+        payment_search_btn = ttk.Button(payment_filter_frame, text="Search"
+                                 ,command=lambda t='payments', sv=payment_search_var: self.search_table(t, sv.get()))
         payment_search_btn.pack(side="left", padx=(10,0))
 
-        payments_table = ttk.Treeview(payments_table_frame, columns=['Course Name' ,'Amount Paid', 'Payment Type', 'Total', 'Transaction Date'], show="headings")
-        payments_table.heading('Course Name', text='Course Name')
-        payments_table.column('Course Name', width=150)
-        payments_table.heading('Amount Paid', text='Amount Paid')
-        payments_table.column('Amount Paid', width=80)
-        payments_table.heading('Payment Type', text='Payment Type')
-        payments_table.column('Payment Type', width=80)
-        payments_table.heading('Total', text='Total')
-        payments_table.column('Total', width=80)
-        payments_table.heading('Transaction Date', text='Transaction Date')
-        payments_table.column('Transaction Date', width=130)
-        payments_table.pack(fill="both", expand=True, padx=(10,10), pady=(0,10))
+        self.payments_columns = ['ID', 'Course Name', 'Amount Paid', 'Payment Type', 'Total', 'Transaction Date']
+        self.payments_table = ttk.Treeview(payments_table_frame, columns=['ID', 'Course Name' ,'Amount Paid', 'Payment Type', 'Total', 'Transaction Date'], show="headings")
+        self.payments_table.heading('ID', text='ID')
+        self.payments_table.column('ID', width=30)
+        self.payments_table.heading('Course Name', text='Course Name')
+        self.payments_table.column('Course Name', width=150)
+        self.payments_table.heading('Amount Paid', text='Amount Paid')
+        self.payments_table.column('Amount Paid', width=80)
+        self.payments_table.heading('Payment Type', text='Payment Type')
+        self.payments_table.column('Payment Type', width=80)
+        self.payments_table.heading('Total', text='Total')
+        self.payments_table.column('Total', width=80)
+        self.payments_table.heading('Transaction Date', text='Transaction Date')
+        self.payments_table.column('Transaction Date', width=130)
+        self.payments_table.pack(fill="both", expand=True, padx=(10,10), pady=(0,10))
 
         def reload_transaction():
-            transaction_vals = select.select_for_student_transactions(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
-            payments_table.delete(*payments_table.get_children())
-            for record in transaction_vals:
-                payments_table.insert("", "end", values=record)
+            self.search_table('payments')
         
         reload_transaction()
         
         payment_operation_table.pack_forget()
+
         # ==========================   SHOW/HIDE Animation
         def show_payment_operation_table():
             print("SHOW payment_operation_table")
@@ -214,18 +227,53 @@ class StudentPaymentView(tk.Toplevel):
             print("HIDE payment_operation_table")
             payment_operation_table.pack_forget()
 
-        def did_select_course(event):
-            update_payment_with_selected(event)
+        def show_delete():
+            if not self.isEditingTransaction:
+                delete_trns_btn.grid(row=0, column=0, sticky="w")
+            confirm_payment_btn.config(text="Save Changes", command=edit_transaction)
+            self.isEditingTransaction = True
+        
+        def hide_delete():
+            if self.isEditingTransaction: 
+                delete_trns_btn.grid_forget()
+            confirm_payment_btn.config(text="Confirm Payment", command=lambda ac="confirm":confirm_payment(ac))
+            self.isEditingTransaction = False
 
-        def update_payment_with_selected(event):
-            selected = courses_table.selection()
+        def did_select_course(event):
+            hide_delete()
+            def update_payment_with_selected_course(event):
+                selected = self.courses_table.selection()
+                if selected:
+                    course_details = self.courses_table.item(selected[0], "values")
+                    show_payment_operation_table()
+                    self.cname.destroy()
+                    self.remAmount.destroy()
+                    self.cname = ttk.Label(payment_entries[0], text=course_details[0])
+                    self.remAmount = ttk.Label(payment_entries[1], text=course_details[1])
+                    self.cname.pack(anchor="center")
+                    self.remAmount.pack(anchor="center")
+                    payment_entries[2].set("")
+                    payment_entries[3].delete(0, tk.END)
+                    payment_entries[4].set_date(datetime.now())
+            update_payment_with_selected_course(event)
+
+        def did_select_payment(event):
+            show_delete()
+            selected = self.payments_table.selection()
             if selected:
-                course_details = courses_table.item(selected[0], "values")
+                payment_details = self.payments_table.item(selected[0], "values")
+                self.paymentID = payment_details[0]
                 show_payment_operation_table()
                 self.cname.destroy()
                 self.remAmount.destroy()
-                self.cname = ttk.Label(payment_entries[0], text=course_details[0])
-                self.remAmount = ttk.Label(payment_entries[1], text=course_details[1])
+                self.cname = ttk.Label(payment_entries[0], text=payment_details[1])
+                self.remAmount = ttk.Label(payment_entries[1], text="---")
+                payment_entries[2].set(payment_details[3])
+                payment_entries[3].delete(0, tk.END)
+                payment_entries[3].insert(0, payment_details[2].split()[0])
+                date_str = payment_details[5]
+                date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+                payment_entries[4].set_date(date_obj)
                 self.cname.pack(anchor="center")
                 self.remAmount.pack(anchor="center")
 
@@ -246,14 +294,17 @@ class StudentPaymentView(tk.Toplevel):
 
         def change_course_to_combobox():
             show_payment_operation_table()
+            hide_delete()
             self.cname.destroy()
             unregistered_courses = select.select_unregistered_courses(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
             unregistered_course_names = [c[0]+" - "+str(c[1])+" EGP" for c in unregistered_courses]
             self.cname = ttk.Combobox(payment_entries[0], textvariable="Course", values=unregistered_course_names, state="readonly")
             self.cname.pack(anchor="center", fill="x")
             self.cname.bind("<<ComboboxSelected>>", on_course_combobox_selected)
+        
+        # ==========================   BUTTON ACTIONS (CONFIRM/EDIT)
 
-        def confirm_payment():
+        def confirm_payment(action="confirm"):
             # Get selected course name from the combobox or label
             if isinstance(self.cname, ttk.Combobox):
                 course_name = self.cname.get().split(' - ')[0]
@@ -281,21 +332,111 @@ class StudentPaymentView(tk.Toplevel):
             self.entry['Transaction Date'] = transaction_date.strftime("%Y-%m-%d")
 
             # You can now use self.entry to insert the payment into the database or further processing
-            print("Payment Entry:", self.entry)
+            # print("Payment Entry:", self.entry)
             sID = student._student_data[student._student_columns[0]]
             cName = self.entry['Course Name']
             paid = self.entry['Paid Amount']
             pay_type = self.entry['Payment Type']
             tran_date = self.entry['Transaction Date']
-            DataController.confirm_payment(sID, cName, paid, pay_type, tran_date)
+            if action == "confirm":
+                DataController.confirm_payment(sID, cName, paid, pay_type, tran_date)
+            elif action == "update":
+                DataController.update_payment(self.paymentID, sID, cName, paid, pay_type, tran_date)
             hide_payment_operation_table()
-            reload_enrollment_table()
-            reload_transaction()
+            reload_data()
+
+        def edit_transaction():
+            confirm_payment('update')
+
+        def delete_transaction():
+            title = "Delete Transaction"
+            message = "Are you sure?"
+            if PopupHandler.confirmation_popup(self, title=title, message=message):
+                delete.delete(DB.db(), 'payments', [self.paymentID])
+                delete.delete_enrollemnts_with_no_payments(DB.db())
+                reload_data()
+                reload_enrollment_table()
+                reload_transaction()
 
         enroll_new_course_btn.config(command=change_course_to_combobox)
-        confirm_payment_btn.config(command=confirm_payment)
-        search_btn.config(command=hide_payment_operation_table)
-        courses_table.bind("<<TreeviewSelect>>", did_select_course)
+        delete_trns_btn.config(command=delete_transaction)
+        self.courses_table.bind("<<TreeviewSelect>>", did_select_course)
+        self.payments_table.bind("<<TreeviewSelect>>", did_select_payment)
+
+        def reload_data():
+            reload_enrollment_table()
+            reload_transaction()
+            reset_values()
+
+        def reset_values():
+            for key in self.entry:
+                self.entry[key] = ''
+
+            if isinstance(self.cname, ttk.Label):
+                self.cname.config(text="")
+            elif isinstance(self.cname, ttk.Combobox):
+                self.cname.set('')
+            
+            self.remAmount.config(text="---")
+            payment_entries[2].set('')
+            payment_entries[3].delete(0, tk.END)
+            payment_entries[4].set_date(datetime.now())
+
+
+    def search_table(self, table_name, query=''):
+        # Get all rows
+        # Clear table
+        self.clear_table(table_name)
+        # Filter and insert matching rows
+        if table_name == 'payments':
+            columns = [
+                "p.id AS ID",
+                "sc.course_name AS 'Course Name'",
+                "p.amount_paid || ' EGP' AS 'Amount Paid'",
+                "p.payment_type AS 'Payment Type'",
+                "sc.course_price || ' EGP' AS 'Total'",
+                "p.payment_date AS 'Transaction Date'"
+            ]
+            all_rows = DataController.load_data_with_args(From=['student_course sc', 'students s', 'payments p'], Where=['s.id', 'p.student_course_id', 's.id'], Value=['sc.student_id', 'sc.id', self.student._student_data[self.student._student_columns[0]]], Columns=columns)
+            for r in all_rows:
+                if any(query.lower() in str(cell).lower() for cell in r):
+                    self.payments_table.insert("", "end", values=r)
+        elif table_name == 'student_course':
+            columns = [
+                "c.course_name AS 'Course Name'",
+
+                """(c.course_price - IFNULL((
+                SELECT SUM(p.amount_paid)
+                FROM payments p
+                WHERE p.student_course_id = c.id
+                ), 0)) || ' EGP' AS Remaining""",
+
+                "c.enrollment_date AS 'Date'"
+            ]
+            where = [
+                     'c.student_id',
+
+                     """(c.course_price - IFNULL((
+                        SELECT SUM(p.amount_paid)
+                        FROM payments p
+                        WHERE p.student_course_id = c.id
+                    ), 0))
+                    """
+                    ]
+            all_rows = DataController.load_data_with_args(From=['student_course c'], Where=where, Value=[self.student._student_data[self.student._student_columns[0]], 0], Operations=[' = ',' > '], Columns=columns)
+            for r in all_rows:
+                if any(query.lower() in str(cell).lower() for cell in r):
+                    self.courses_table.insert("", "end", values=r)
+        
+
+    def clear_table(self, table_name):
+        if table_name == 'payments':
+            for row in self.payments_table.get_children():
+                self.payments_table.delete(row)
+        elif table_name == 'student_course':
+            for row in self.courses_table.get_children():
+                self.courses_table.delete(row)
+                 
 
     def view(self):
         self.lift()

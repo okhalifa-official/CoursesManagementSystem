@@ -21,6 +21,40 @@ def load_data(table_name):
     rows = cursor.fetchall()
     return rows
 
+def load_data_with_args(From, Where, Value, Columns=["*"], Operations=[]):
+    columns_string = ""
+    from_string = ""
+    condition_string = ""
+    for i,col in enumerate(Columns):
+        columns_string += col
+        if i < len(Columns)-1:
+            columns_string += ', '
+    for i,Frm in enumerate(From):
+        from_string += Frm
+        if i < len(From)-1:
+            from_string += ', '
+    for i in range(min(len(Where), len(Value))):
+        operation = '='
+        if i < len(Operations):
+            operation = Operations[i]
+        condition_string += Where[i] + operation + str(Value[i])
+        if i < min(len(Where), len(Value))-1:
+            condition_string += ' AND '
+
+    try:
+        query = f"""
+            SELECT {columns_string}
+            FROM {from_string}
+            WHERE {condition_string};
+        """
+        cursor = database.cursor()
+        cursor.execute(query)
+        result = cursor.fetchall()
+        return result
+    except Exception as error:
+        print(f"Failed loading data: {error}")
+        return None
+
 def is_student_enrolled_to(sID, course_name):
     query = """
         SELECT 1 FROM student_course
@@ -62,7 +96,7 @@ def enroll_student_to_course(sID, course_name):
     database.commit()
     return True
 
-def add_new_apyment(sID, course_name, paid, pay_type, date):
+def add_new_payment(sID, course_name, paid, pay_type, date):
     cursor = database.cursor()
     # Get the student_course id for this student and course
     cursor.execute("""
@@ -95,7 +129,33 @@ def confirm_payment(sID, course_name, paid, pay_type, date):
             return
 
     # pay amount to student_course table
-    add_new_apyment(sID, course_name, paid, pay_type, date)
+    add_new_payment(sID, course_name, paid, pay_type, date)
+
+def update_payment(payID, sID, course_name, paid, pay_type, date):
+    cursor = database.cursor()
+    # Get the student_course id for this student and course
+    cursor.execute("""
+        SELECT id FROM student_course
+        WHERE student_id = ? AND course_name = ?
+        ORDER BY id DESC LIMIT 1
+    """, (sID, course_name))
+    result = cursor.fetchone()
+    if not result:
+        print("Student is not enrolled in this course.")
+        return False
+    student_course_id = result[0]
+
+    try:
+        cursor.execute("""
+            UPDATE payments
+            SET student_id = ?, student_course_id = ?, payment_date = ?, payment_type = ?, amount_paid = ?
+            WHERE id = ?
+        """, (sID, student_course_id, date, pay_type, paid, payID))
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed updating payment: {error}")
+        return False
 
 def add_new_student(fname, lname, gender, country, phone, address=None, email=None, university=None, barcode=None):
     cursor = database.cursor()
