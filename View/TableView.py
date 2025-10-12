@@ -21,6 +21,8 @@ class CoursesApp(tk.Tk):
         self.geometry("1000x600")
 
         # Create Tabs
+        self.topbar_frame = ttk.Frame(self)
+        self.topbar_frame.pack(side="top", fill='x', padx=15, pady=(10,0))
         self.tabs = ttk.Notebook(self)
         self.tabs.pack(fill="both", expand=True)
 
@@ -31,6 +33,9 @@ class CoursesApp(tk.Tk):
         self.tail_left = {}
         self.tail_right = {}
         self.edit_btn = {}
+
+        self.settings_btn = ttk.Button(self.topbar_frame, text="Settings")
+        self.settings_btn.pack(side='left')
         
         # import definition object from Model
         self.table_definitions = DataModel.model
@@ -38,6 +43,7 @@ class CoursesApp(tk.Tk):
         # selected row in table
         self.selected_obj = {}
         
+    def load(self):
 
         for table_name, col_name in self.table_definitions.items():
             # Add a tab for each table
