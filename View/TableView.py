@@ -34,7 +34,11 @@ class CoursesApp(tk.Tk):
         self.tail_right = {}
         self.edit_btn = {}
 
-        self.settings_btn = ttk.Button(self.topbar_frame, text="Settings")
+        def settings_btn_pressed():
+            from View.Settings.SettingsViewController import SettingsView
+            _r.route(current=self, to=SettingsView(self))
+
+        self.settings_btn = ttk.Button(self.topbar_frame, text="Settings", command=settings_btn_pressed)
         self.settings_btn.pack(side='left')
         
         # import definition object from Model
@@ -107,8 +111,8 @@ class CoursesApp(tk.Tk):
 
             # Create Add Button (When pressed, open add button Dialog from Controller)
             report_btn = ttk.Button(self.tail_right[table_name], text=f"Report",
-                                 command=lambda t=table_name, f=col_name
-                                 : self.add_item(t, f))
+                                 command=lambda t=table_name
+                                 : self.report_pressed(t))
             
             # Style Buttons
             report_btn.pack(side="right")
@@ -250,6 +254,13 @@ class CoursesApp(tk.Tk):
 
     def attendance_btn_pressed(self, table_name):
         print("attendance pressed")
+
+    def report_pressed(self, table_name):
+        if table_name == "students":
+            from View.Students.student_report_view import StudentReportView
+            new_student_view = StudentReportView(self,self.selected_obj[table_name])
+            _r.route(current=self, to=new_student_view)
+
 
     def view(self):
         self.load_all_data()
