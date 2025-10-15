@@ -38,7 +38,7 @@ class LoginView(tk.Tk):
 
         def attempt_login():
             print("login pressed")
-            _r.route(self, TableView.CoursesApp())
+            _r.route(self, TableView.CoursesApp(self))
         
         login_btn = ttk.Button(credentials_frame, text="Login",
                                command=attempt_login)

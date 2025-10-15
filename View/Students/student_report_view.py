@@ -206,16 +206,9 @@ class StudentReportView(tk.Toplevel):
                 "c.enrollment_date AS 'Enrolled At'"
             ]
             where = [
-                     'c.student_id',
-
-                     """(c.course_price - IFNULL((
-                        SELECT SUM(p.amount_paid)
-                        FROM payments p
-                        WHERE p.student_course_id = c.id
-                    ), 0))
-                    """
+                     'c.student_id'
                     ]
-            all_rows = DataController.load_data_with_args(From=['student_course c'], Where=where, Value=[self.student._student_data[self.student._student_columns[0]], 0], Operations=[' = ',' > '], Columns=columns)
+            all_rows = DataController.load_data_with_args(From=['student_course c'], Where=where, Value=[self.student._student_data[self.student._student_columns[0]]], Operations=[' = '], Columns=columns)
             for r in all_rows:
                 if any(query.lower() in str(cell).lower() for cell in r):
                     self.courses_table.insert("", "end", values=r)

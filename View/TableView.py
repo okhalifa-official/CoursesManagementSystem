@@ -12,9 +12,9 @@ from Model.Query import delete
 from Router import route as _r
 
 # ------------------ Main App ------------------
-class CoursesApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
+class CoursesApp(tk.Toplevel):
+    def __init__(self,parent):
+        super().__init__(parent)
         
         # Window Info
         self.title("Courses Management System")
@@ -33,6 +33,10 @@ class CoursesApp(tk.Tk):
         self.tail_left = {}
         self.tail_right = {}
         self.edit_btn = {}
+        self.search_var = {}
+        self.search_entry = {}
+        self.search_btn = {}
+        self.report_btn = {}
 
         def settings_btn_pressed():
             from View.Settings.SettingsViewController import SettingsView
@@ -76,12 +80,12 @@ class CoursesApp(tk.Tk):
             
 
             # Add search bar
-            search_var = tk.StringVar()
-            search_entry = ttk.Entry(filter_frame, textvariable=search_var)
-            search_entry.pack(side="left", fill="x", expand=True, padx=5)
-            search_btn = ttk.Button(filter_frame, text="Search",
-                                    command=lambda t=table_name, sv=search_var: self.search_table(t, sv.get()))
-            search_btn.pack(side="left", padx=5)
+            self.search_var[table_name] = tk.StringVar(self)
+            self.search_entry[table_name] = ttk.Entry(filter_frame, textvariable=self.search_var[table_name])
+            self.search_entry[table_name].pack(side="left", fill="x", expand=True, padx=5)
+            self.search_btn[table_name] = ttk.Button(filter_frame, text="Search",
+                                    command=lambda t=table_name, sv=self.search_var[table_name]: self.search_table(t, sv.get()))
+            self.search_btn[table_name].pack(side="left", padx=5)
 
             # Create Table View
             tree = ttk.Treeview(tab, columns=col_name, show="headings")
@@ -110,12 +114,10 @@ class CoursesApp(tk.Tk):
             self.tail_right[table_name].pack(side='right', fill="x", expand=True, padx=5, pady=5)
 
             # Create Add Button (When pressed, open add button Dialog from Controller)
-            report_btn = ttk.Button(self.tail_right[table_name], text=f"Report",
+            self.report_btn[table_name] = ttk.Button(self.tail_right[table_name], text=f"Report",
                                  command=lambda t=table_name
                                  : self.report_pressed(t))
             
-            # Style Buttons
-            report_btn.pack(side="right")
 
         self.payment_btn = ttk.Button(self.action_btns_frame['students'],
                                 text=f"Add Payment",
@@ -150,6 +152,7 @@ class CoursesApp(tk.Tk):
         if selected:
             self.edit_btn[table_name].config(command=lambda t=table_name: self.edit_btn_pressed(t))
             self.edit_btn[table_name].pack(side="left", padx=5)
+            self.report_btn[table_name].pack(side="right")
             row_data = tree.item(selected[0])["values"]
             # print(row_data)
             if table_name == 'students':
@@ -165,6 +168,7 @@ class CoursesApp(tk.Tk):
                 self.selected_obj[table_name] = DataModel.Course(row_data[0])
         else:
             self.edit_btn[table_name].pack_forget()
+            self.report_btn[table_name].pack_forget()
             if table_name == 'students':
                 self.payment_btn.pack_forget()
 
@@ -202,6 +206,7 @@ class CoursesApp(tk.Tk):
         self.load_all_data()
 
     def search_table(self, table_name, query):
+        # print("query pressed: ",query)
         # Get all rows
         all_rows = DataController.load_data(table_name)
         # Clear table
