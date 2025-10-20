@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
-from tkcalendar import DateEntry
 from PIL import Image, ImageTk
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
@@ -13,6 +12,7 @@ from Query import select, insert, delete
 import DB
 from Controller import DataController,PopupHandler
 from datetime import datetime
+from lib.DateModule import DatePicker
 
 
 class StudentPaymentView(tk.Toplevel):
@@ -159,8 +159,19 @@ class StudentPaymentView(tk.Toplevel):
         payment_entries.append(ttk.Labelframe(element_frame[1]))
         payment_entries.append(ttk.Combobox(element_frame[2], textvariable="Cash", values=["Cash", "Vodafone Cash", "Instapay", "Visa"], state="readonly"))
         payment_entries.append(ttk.Entry(element_frame[3]))
-        date_entry = DateEntry(element_frame[4], state="readonly", foreground="white", background="grey", bordercolor="black", headersbackground="white", headersforeground="grey", normalbackground="white", normalforeground="white", weekendbackground="grey", weekendforeground="white", selectbackground="black", selectforeground="yellow")
-        payment_entries.append(date_entry)
+        init_date = None
+        try:
+            init_date = datetime.today().date()  # Default to today
+            print(init_date)
+        except Exception:
+            init_date = None
+
+        datepicker = DatePicker(
+            element_frame[4],
+            date_pattern="yyyy-mm-dd",
+            initial_date=init_date
+        )
+        payment_entries.append(datepicker)
 
         for ent in payment_entries:
             ent.pack(fill="x")
@@ -254,7 +265,24 @@ class StudentPaymentView(tk.Toplevel):
                     self.remAmount.pack(anchor="center")
                     payment_entries[2].set("")
                     payment_entries[3].delete(0, tk.END)
-                    payment_entries[4].set_date(datetime.now())
+                    payment_entries[4].destroy()
+                    # --- Replace date with custom DatePicker ---
+                    date_str = datetime.today().date().strftime("%Y-%m-%d")
+                    try:
+                        init_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    except Exception:
+                        init_date = None
+
+                    # Destroy old date entry if exists
+                    try:
+                        payment_entries[4].destroy()
+                    except Exception:
+                        pass
+
+                    # Create custom DatePicker instead of DateEntry
+                    payment_entries[4] = DatePicker(payment_entries[4].master, date_pattern="yyyy-mm-dd", initial_date=init_date)
+                    payment_entries[4].pack(anchor="center")
+
             update_payment_with_selected_course(event)
 
         def did_select_payment(event):
@@ -266,14 +294,34 @@ class StudentPaymentView(tk.Toplevel):
                 show_payment_operation_table()
                 self.cname.destroy()
                 self.remAmount.destroy()
+
+                # Update labels
                 self.cname = ttk.Label(payment_entries[0], text=payment_details[1])
                 self.remAmount = ttk.Label(payment_entries[1], text="---")
+
+                # Update payment method and amount
                 payment_entries[2].set(payment_details[3])
                 payment_entries[3].delete(0, tk.END)
                 payment_entries[3].insert(0, payment_details[2].split()[0])
+
+                # --- Replace date with custom DatePicker ---
                 date_str = payment_details[5]
-                date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
-                payment_entries[4].set_date(date_obj)
+                try:
+                    init_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                except Exception:
+                    init_date = None
+
+                # Destroy old date entry if exists
+                try:
+                    payment_entries[4].destroy()
+                except Exception:
+                    pass
+
+                # Create custom DatePicker instead of DateEntry
+                payment_entries[4] = DatePicker(payment_entries[4].master, date_pattern="yyyy-mm-dd", initial_date=init_date)
+                payment_entries[4].pack(anchor="center")
+
+                # Repack labels
                 self.cname.pack(anchor="center")
                 self.remAmount.pack(anchor="center")
 
@@ -328,8 +376,17 @@ class StudentPaymentView(tk.Toplevel):
             self.entry['Paid Amount'] = paid_amount
 
             # Get transaction date from DateEntry
-            transaction_date = payment_entries[4].get_date()
-            self.entry['Transaction Date'] = transaction_date.strftime("%Y-%m-%d")
+            try:
+                date_text = payment_entries[4].entry.get().strip()
+                if date_text:
+                    transaction_date = datetime.strptime(date_text, "%Y-%m-%d").date()
+                    self.entry['Transaction Date'] = transaction_date.strftime("%Y-%m-%d")
+                else:
+                    # No date selected
+                    self.entry['Transaction Date'] = datetime.today().strftime("%Y-%m-%d")
+            except Exception:
+                # In case the calendar was closed without a date or widget got destroyed
+                self.entry['Transaction Date'] = datetime.today().strftime("%Y-%m-%d")
 
             # You can now use self.entry to insert the payment into the database or further processing
             # print("Payment Entry:", self.entry)
@@ -380,7 +437,7 @@ class StudentPaymentView(tk.Toplevel):
             self.remAmount.config(text="---")
             payment_entries[2].set('')
             payment_entries[3].delete(0, tk.END)
-            payment_entries[4].set_date(datetime.now())
+            payment_entries[4]._set_date(datetime.now())
 
 
     def search_table(self, table_name, query=''):

@@ -1,12 +1,14 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
-from tkcalendar import DateEntry
+from datetime import datetime
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 import DataArchitecture as DataArch
 import Router.route as _r
 from Controller import DataController
+
+from lib.DateModule import DatePicker
 
 
 class CourseAddView(tk.Toplevel):
@@ -101,9 +103,16 @@ class CourseAddView(tk.Toplevel):
                         entry_widget.grid(row=r, column=1, padx=20)
                         self.entry[label_text] = entry_widget
                     case 'date':
-                        entry_widget = DateEntry(fields_frame, state="readonly", foreground="white", background="grey", bordercolor="black", headersbackground="white", headersforeground="grey", normalbackground="white", normalforeground="white", weekendbackground="grey", weekendforeground="white", selectbackground="black", selectforeground="yellow")
-                        entry_widget.grid(row=r, column=1, padx=20)
-                        self.entry[label_text] = entry_widget
+                        # Use custom DatePicker (Entry + Calendar) to avoid DateEntry freeze issues
+                        init_date = None
+                        try:
+                            init_date = datetime.strptime(course._course_data[label_text], "%Y-%m-%d").date()
+                        except Exception:
+                            init_date = None
+
+                        datepicker = DatePicker(fields_frame, date_pattern="yyyy-mm-dd", initial_date=init_date)
+                        datepicker.grid(row=r, column=1, padx=20, sticky="w")
+                        self.entry[label_text] = datepicker
                     case _:
                         entry_widget = ttk.Entry(fields_frame)
                         entry_widget.insert(0, placeholder[label_text]) # placeholder
@@ -125,18 +134,24 @@ class CourseAddView(tk.Toplevel):
         def create_course():
             # store all new course data in self.data{}
             for key, widget in self.entry.items():
-                # Handle different widget types
-                if isinstance(widget, DateEntry):
-                    value = widget.get_date().strftime("%Y-%m-%d")
+                # DatePicker (custom)
+                if hasattr(widget, "entry") and isinstance(getattr(widget, "entry"), ttk.Entry):
+                    # e.g. DatePicker: .entry is the underlying entry widget
+                    value = widget.entry.get().strip()
                 elif isinstance(widget, tk.StringVar):
                     value = widget.get()
-                elif isinstance(widget, ttk.Radiobutton):
-                    # For radiobuttons, get the value from the associated StringVar
-                    continue  # Skip individual radiobuttons, use the StringVar stored with the group label
                 elif isinstance(widget, ttk.Entry):
                     value = widget.get()
+                elif isinstance(widget, ttk.Combobox):
+                    value = widget.get()
                 else:
-                    value = widget
+                    # fallback: whatever the widget is (e.g., radiobutton group stringvar earlier)
+                    try:
+                        value = widget.get()
+                    except Exception:
+                        value = widget
+
+                # store
                 self.data[key] = None
                 try:
                     if value != placeholder[key]:

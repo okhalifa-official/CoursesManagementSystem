@@ -21,10 +21,11 @@ def load_data(table_name):
     rows = cursor.fetchall()
     return rows
 
-def load_data_with_args(From, Where, Value, Columns=["*"], Operations=[]):
+def load_data_with_args(From, Where, Value, Columns=["*"], Operations=[], group=[]):
     columns_string = ""
     from_string = ""
     condition_string = ""
+    group_string = ""
     for i,col in enumerate(Columns):
         columns_string += col
         if i < len(Columns)-1:
@@ -40,13 +41,21 @@ def load_data_with_args(From, Where, Value, Columns=["*"], Operations=[]):
         condition_string += Where[i] + operation + str(Value[i])
         if i < min(len(Where), len(Value))-1:
             condition_string += ' AND '
+    for i,grp in enumerate(group):
+        group_string += grp
+        if i < len(group)-1:
+            group_string += ', '
 
     try:
         query = f"""
             SELECT {columns_string}
             FROM {from_string}
-            WHERE {condition_string};
+            WHERE {condition_string}
         """
+        if len(group) > 0:
+            query += f"GROUP BY {group_string}"
+
+        print(query)
         cursor = database.cursor()
         cursor.execute(query)
         result = cursor.fetchall()

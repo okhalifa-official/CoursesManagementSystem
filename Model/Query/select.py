@@ -109,7 +109,9 @@ def select_unregistered_courses(database, ID):
             SELECT sc.course_id
             FROM student_course sc
             WHERE sc.student_id = {ID}
-        );
+        )
+        AND c.start_date <= DATE('now')
+        AND c.end_date >= DATE('now');
     """
     cursor = database.cursor()
     cursor.execute(query)

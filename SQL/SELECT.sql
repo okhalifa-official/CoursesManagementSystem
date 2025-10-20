@@ -47,3 +47,9 @@ WHERE c.id NOT IN (
     FROM student_course sc
     WHERE sc.student_id = 1
 );
+
+-- total enrolled students, total paid, total remaining, total expected
+SELECT COUNT(*) AS 'No Enrolled Students', SUM(p.amount_paid) || ' EGP' AS 'Total Amount Paid', 
+        COUNT(*)*c.course_price-SUM(p.amount_paid) || ' EGP' AS 'Total Remaining', 
+        COUNT(*)*c.course_price || ' EGP' AS 'Total Expected'
+FROM 

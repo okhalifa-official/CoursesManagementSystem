@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
-from tkcalendar import DateEntry
 from datetime import datetime
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
@@ -10,6 +9,9 @@ from DataModel import Course
 from Controller import DataController, PopupHandler
 import DataArchitecture as DataArch
 import Router.route as _r
+
+from lib.DateModule import DatePicker
+
 
 
 class CourseEditView(tk.Toplevel):
@@ -28,6 +30,7 @@ class CourseEditView(tk.Toplevel):
         placeholder = DataArch.add_course_elements_placeholders
         self.entry = {}
         self.data = {}
+        style = ttk.Style()
 
         def back_btn_pressed():
             _r.route_back(self)
@@ -133,10 +136,16 @@ class CourseEditView(tk.Toplevel):
                             entry_widget.set(doctor_id)  # a default value
                         self.entry[label_text] = entry_widget
                     case 'date':
-                        entry_widget = DateEntry(fields_frame, state="readonly", foreground="white", background="grey", bordercolor="black", headersbackground="white", headersforeground="grey", normalbackground="white", normalforeground="white", weekendbackground="grey", weekendforeground="white", selectbackground="black", selectforeground="yellow")
-                        entry_widget.grid(row=r, column=1, padx=20)
-                        entry_widget.set_date(datetime.strptime(course._course_data[label_text], "%Y-%m-%d").date())
-                        self.entry[label_text] = entry_widget
+                        # Use custom DatePicker (Entry + Calendar) to avoid DateEntry freeze issues
+                        init_date = None
+                        try:
+                            init_date = datetime.strptime(course._course_data[label_text], "%Y-%m-%d").date()
+                        except Exception:
+                            init_date = None
+
+                        datepicker = DatePicker(fields_frame, date_pattern="yyyy-mm-dd", initial_date=init_date)
+                        datepicker.grid(row=r, column=1, padx=20, sticky="w")
+                        self.entry[label_text] = datepicker
                     case _:
                         entry_widget = ttk.Entry(fields_frame)
                         if course._course_data[label_text]:
@@ -162,22 +171,27 @@ class CourseEditView(tk.Toplevel):
                 #print(values)
 
         def update_course():
-            print("hello world")
+            # print("hello world")
             # store all new course data in self.data{}
             for key, widget in self.entry.items():
-                # Handle different widget types
-                if isinstance(widget, DateEntry):
-                    value = widget.get_date().strftime("%Y-%m-%d")
-                
+                # DatePicker (custom)
+                if hasattr(widget, "entry") and isinstance(getattr(widget, "entry"), ttk.Entry):
+                    # e.g. DatePicker: .entry is the underlying entry widget
+                    value = widget.entry.get().strip()
                 elif isinstance(widget, tk.StringVar):
                     value = widget.get()
-                elif isinstance(widget, ttk.Radiobutton):
-                    # For radiobuttons, get the value from the associated StringVar
-                    continue  # Skip individual radiobuttons, use the StringVar stored with the group label
                 elif isinstance(widget, ttk.Entry):
                     value = widget.get()
+                elif isinstance(widget, ttk.Combobox):
+                    value = widget.get()
                 else:
-                    value = widget
+                    # fallback: whatever the widget is (e.g., radiobutton group stringvar earlier)
+                    try:
+                        value = widget.get()
+                    except Exception:
+                        value = widget
+
+                # store
                 self.data[key] = None
                 try:
                     if value != placeholder[key]:
@@ -225,10 +239,8 @@ class CourseEditView(tk.Toplevel):
     
     def view(self):
         self.lift()
-        self.focus_force()    # Force focus to window
-        self.attributes('-topmost', True)  # Temporarily set as topmost
-        self.after(100, lambda: self.attributes('-topmost', False))  # Remove topmost after 100ms
-        self.state('zoomed')  # Open window in full screen mode
+        self.after(200, lambda: self.focus_force())  # delayed focus fix
+        self.state('zoomed')
 
         
 

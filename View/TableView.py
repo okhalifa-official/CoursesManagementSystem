@@ -126,6 +126,7 @@ class CoursesApp(tk.Toplevel):
                                 text=f"Record Attendance",
                                 command=lambda t='courses': self.attendance_btn_pressed(t))
         self.search_student_entry = ttk.Entry(self.tail_left['courses'])
+        self.report_btn['courses'].pack(side="right")
 
 
         # Bind tab change event to update current_node
@@ -152,12 +153,12 @@ class CoursesApp(tk.Toplevel):
         if selected:
             self.edit_btn[table_name].config(command=lambda t=table_name: self.edit_btn_pressed(t))
             self.edit_btn[table_name].pack(side="left", padx=5)
-            self.report_btn[table_name].pack(side="right")
             row_data = tree.item(selected[0])["values"]
             # print(row_data)
             if table_name == 'students':
                 self.payment_btn.config(command=lambda t='students': self.payment_btn_pressed(t))
                 self.payment_btn.pack(side='left', padx=5)
+                self.report_btn[table_name].pack(side="right")
                 self.selected_obj[table_name] = DataModel.Student(row_data[0])
             elif table_name == 'doctors':
                 self.selected_obj[table_name] = DataModel.Doctor(row_data[0])
@@ -168,8 +169,8 @@ class CoursesApp(tk.Toplevel):
                 self.selected_obj[table_name] = DataModel.Course(row_data[0])
         else:
             self.edit_btn[table_name].pack_forget()
-            self.report_btn[table_name].pack_forget()
             if table_name == 'students':
+                self.report_btn[table_name].pack_forget()
                 self.payment_btn.pack_forget()
 
     def clear_table(self, table_name):
@@ -265,6 +266,10 @@ class CoursesApp(tk.Toplevel):
             from View.Students.student_report_view import StudentReportView
             new_student_view = StudentReportView(self,self.selected_obj[table_name])
             _r.route(current=self, to=new_student_view)
+        elif table_name == 'courses':
+            from View.Courses.course_report_view import CourseReportView
+            new_course_view = CourseReportView(self)
+            _r.route(current=self, to=new_course_view)
 
 
     def view(self):

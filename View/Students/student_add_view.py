@@ -6,6 +6,29 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 import DataArchitecture as DataArch
 from Controller import DataController
 import Router.route as _r
+from Controller.Validation import Validation
+
+
+def validate_data(data: dict) -> bool:
+    # Example validation: Ensure required fields are filled
+    message = ""
+    if (message := Validation.is_valid_name(data['first_name'])) != True:
+        print(message)
+    elif (message := Validation.is_valid_name(data['last_name'])) != True:
+        print(message)
+    elif (message := Validation.is_valid_country_code(data['country_code'])) != True:
+        print(message)
+    elif (message := Validation.is_valid_phone_number(data['phone_number'])) != True:
+        print(message)
+    elif (message := Validation.is_valid_email(data['email'])) != True:
+        print(message)
+    elif (message := Validation.is_valid_university(data['university'])) != True:
+        print(message)
+    # elif (message := Validation.is_valid_barcode(data['barcode'])) != True:
+    #     print(message)
+    else:
+        return True
+    return False
 
 
 class StudentAddView(tk.Toplevel):
@@ -132,18 +155,19 @@ class StudentAddView(tk.Toplevel):
                 except KeyError:
                     self.data[key] = value
             print(self.data)
-            if DataController.add_new_student(
-                fname=self.data['first_name'],
-                lname=self.data['last_name'],
-                gender=self.data['gender'],
-                country=self.data['country_code'],
-                phone=self.data['phone_number'],
-                email=self.data['email'],
-                address=self.data['address'],
-                university=self.data['university'],
-                barcode=self.data['barcode']
-            ):
-                back_btn_pressed()
+            if validate_data(self.data):
+                if DataController.add_new_student(
+                    fname=self.data['first_name'],
+                    lname=self.data['last_name'],
+                    gender=self.data['gender'],
+                    country=self.data['country_code'],
+                    phone=self.data['phone_number'],
+                    email=self.data['email'],
+                    address=self.data['address'],
+                    university=self.data['university'],
+                    barcode=self.data['barcode']
+                ):
+                    back_btn_pressed()
         
         create_btn = ttk.Button(vertical_stack, text="Create",
                                command=create_student)
