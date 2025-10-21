@@ -1,7 +1,6 @@
 import random
 import string
-import fake_data as fake
-import DataArchitecture as DataArch
+from Model import DataArchitecture as DataArch
 from Query import select
 import DB
 def random_string(length=None):

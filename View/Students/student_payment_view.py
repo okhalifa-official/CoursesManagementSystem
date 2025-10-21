@@ -71,7 +71,7 @@ class StudentPaymentView(tk.Toplevel):
         profile_frame = ttk.Frame(left_stack)
         profile_frame.pack(side="top", fill="x", anchor="n")
 
-        courses_table_frame = ttk.Labelframe(left_stack, text="Enrolled Courses")
+        courses_table_frame = ttk.Labelframe(left_stack, text="Registered with Installments")
         courses_table_frame.pack(side="top", fill="both", expand=True, pady=(30,0), anchor="n")
 
 

@@ -43,7 +43,7 @@ class CoursesApp(tk.Tk):
             _r.route(current=self, to=SettingsView(self))
 
         self.settings_btn = ttk.Button(self.topbar_frame, text="Settings", command=settings_btn_pressed)
-        self.settings_btn.pack(side='left')
+        # self.settings_btn.pack(side='left')
         
         # import definition object from Model
         self.table_definitions = DataModel.model
@@ -163,9 +163,9 @@ class CoursesApp(tk.Tk):
             elif table_name == 'doctors':
                 self.selected_obj[table_name] = DataModel.Doctor(row_data[0])
             elif table_name == 'courses':
-                self.search_student_entry.pack(side="left", padx=(0,15), fill="x", expand=True)
+                # self.search_student_entry.pack(side="left", padx=(0,15), fill="x", expand=True)
                 self.attendance_btn.config(command=lambda t='courses': self.attendance_btn_pressed(t))
-                self.attendance_btn.pack(side='left')
+                # self.attendance_btn.pack(side='left')
                 self.selected_obj[table_name] = DataModel.Course(row_data[0])
         else:
             self.edit_btn[table_name].pack_forget()

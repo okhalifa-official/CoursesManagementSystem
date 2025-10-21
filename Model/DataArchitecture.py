@@ -3,55 +3,55 @@ entities = ['students', 'doctors','courses', 'studentcourse', 'payments']
 columns = [
     # students
     [
-        "id",
-        "first_name",
-        "last_name",
-        "gender",
-        "country_code",
-        "phone_number",
-        "address",
-        "email",
-        "university",
-        "barcode"
+        "ID",
+        "First Name",
+        "Last Name",
+        "Gender",
+        "Country Code",
+        "Phone Number",
+        "Address",
+        "Email",
+        "University",
+        "Barcode"
     ],
     # doctors
     [
-        "id",
-        "first_name",
-        "last_name",
-        "gender",
-        "email",
-        "country_code",
-        "phone_number"
+        "ID",
+        "First Name",
+        "Last Name",
+        "Gender",
+        "Email",
+        "Country Code",
+        "Phone Number"
     ],
     # courses
     [
-        "id",
-        "name",
-        "doctor_name",
-        "price",
-        "start_date",
-        "end_date"
+        "ID",
+        "Course Name",
+        "Doctor Name",
+        "Price",
+        "Start Date",
+        "End Date"
     ],
     # student_course
     [
-        "id",
-        "student_id",
-        "doctor_id",
-        "course_name",
-        "course_price",
-        "course_start_date",
-        "course_end_date",
-        "enrollment_date",
-        "course_id"
+        "ID",
+        "Student ID",
+        "Doctor ID",
+        "Course Name",
+        "Course Price",
+        "Course Start Date",
+        "Course End Date",
+        "Enrollment Date",
+        "Course ID"
     ],
     # payments
     [
-        "id",
-        "student_id",
-        "student_course_id",
-        "payment_date",
-        "amount_paid"
+        "ID",
+        "Student ID",
+        "Student Course ID",
+        "Payment Date",
+        "Amount Paid"
     ]
 ]
 

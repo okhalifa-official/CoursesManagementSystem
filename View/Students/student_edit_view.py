@@ -19,25 +19,25 @@ def show_error(message: str):
 def validate_data(data: dict) -> bool:
     # Example validation: Ensure required fields are filled
     message = ""
-    if (message := Validation.is_valid_name(data['first_name'])) != True:
+    if (message := Validation.is_valid_name(data['First Name'])) != True:
         show_error(message)
         return False
-    if (message := Validation.is_valid_name(data['last_name'])) != True:
+    if (message := Validation.is_valid_name(data['Last Name'])) != True:
         show_error(message)
         return False
-    if (message := Validation.is_valid_country_code(data['country_code'])) != True:
+    if (message := Validation.is_valid_country_code(data['Country Code'])) != True:
         show_error(message)
         return False
-    if (message := Validation.is_valid_phone_number(data['phone_number'])) != True:
+    if (message := Validation.is_valid_phone_number(data['Phone Number'])) != True:
         show_error(message)
         return False
-    if (message := Validation.is_valid_email(data['email'])) != True:
+    if (message := Validation.is_valid_email(data['Email'])) != True:
         show_error(message)
         return False
-    if (message := Validation.is_valid_university(data['university'])) != True:
+    if (message := Validation.is_valid_university(data['University'])) != True:
         show_error(message)
         return False
-    # if (message := Validation.is_valid_barcode(data['barcode'])) != True:
+    # if (message := Validation.is_valid_barcode(data['Barcode'])) != True:
     #     print(message)
     #     return False
     return True
@@ -199,15 +199,15 @@ class StudentEditView(tk.Toplevel):
             # print(self.data)
             if validate_data(self.data):
                 if DataController.add_new_student(
-                    fname=self.data['first_name'],
-                    lname=self.data['last_name'],
-                    gender=self.data['gender'],
-                    country=self.data['country_code'],
-                    phone=self.data['phone_number'],
-                    email=self.data['email'],
-                    address=self.data['address'],
-                    university=self.data['university'],
-                    barcode=self.data['barcode']
+                    fname=self.data['First Name'],
+                    lname=self.data['Last Name'],
+                    gender=self.data['Gender'],
+                    country=self.data['Country Code'],
+                    phone=self.data['Phone Number'],
+                    email=self.data['Email'],
+                    address=self.data['Address'],
+                    university=self.data['University'],
+                    barcode=self.data['Barcode']
                 ):
                     back_btn_pressed()
                     

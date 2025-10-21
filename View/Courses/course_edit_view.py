@@ -22,19 +22,19 @@ def show_error(message: str):
 def validate_data(data: dict) -> bool:
     # Example validation: Ensure required fields are filled
     message = ""
-    if (message := Validation.is_valid_course_name(data['name'])) != True:
+    if (message := Validation.is_valid_course_name(data['Course Name'])) != True:
         show_error(message)
         return False
-    if (message := Validation.is_valid_doctor_name(data['doctor_name'])) != True:
+    if (message := Validation.is_valid_doctor_name(data['Doctor Name'])) != True:
         show_error(message)
         return False
-    if (message := Validation.is_valid_payment_amount(data['price'])) != True:
+    if (message := Validation.is_valid_payment_amount(data['Price'])) != True:
         show_error(message)
         return False
-    if (message := Validation.is_valid_start_date(data['start_date'])) != True:
+    if (message := Validation.is_valid_start_date(data['Start Date'])) != True:
         show_error(message)
         return False
-    if (message := Validation.is_valid_end_date(data['end_date'])) != True:
+    if (message := Validation.is_valid_end_date(data['End Date'])) != True:
         show_error(message)
         return False
     return True
@@ -228,11 +228,11 @@ class CourseEditView(tk.Toplevel):
             if validate_data(self.data):
                 if DataController.update_course(
                     id=self.course._course_data[self.course._course_columns[0]],
-                    name=self.data['name'],
-                    doc_name=self.data['doctor_name'],
-                    price=self.data['price'],
-                    s_date=self.data['start_date'],
-                    e_date=self.data['end_date']
+                    name=self.data['Course Name'],
+                    doc_name=self.data['Doctor Name'],
+                    price=self.data['Price'],
+                    s_date=self.data['Start Date'],
+                    e_date=self.data['End Date']
                 ):
                     back_btn_pressed()
             
