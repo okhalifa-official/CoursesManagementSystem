@@ -1,10 +1,11 @@
-from View.Login import LoginViewController as Login
+from View.TableView import CoursesApp
 
 
 # ------------------ Run ------------------
 
 if __name__ == "__main__":
     # init_db()
-    app = Login.LoginView()
+    app = CoursesApp()
+    app.load()
     app.view()
     app.mainloop()

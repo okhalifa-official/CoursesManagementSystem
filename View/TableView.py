@@ -12,9 +12,9 @@ from Model.Query import delete
 from Router import route as _r
 
 # ------------------ Main App ------------------
-class CoursesApp(tk.Toplevel):
-    def __init__(self,parent):
-        super().__init__(parent)
+class CoursesApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
         
         # Window Info
         self.title("Courses Management System")
