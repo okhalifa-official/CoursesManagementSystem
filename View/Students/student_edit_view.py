@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
@@ -8,6 +8,39 @@ from DataModel import Student
 from Controller import DataController, PopupHandler
 import DataArchitecture as DataArch
 import Router.route as _r
+from Controller.Validation import Validation
+
+def show_error(message: str):
+    messagebox.showerror(
+            "Invalid Entry",
+            message
+    )
+
+def validate_data(data: dict) -> bool:
+    # Example validation: Ensure required fields are filled
+    message = ""
+    if (message := Validation.is_valid_name(data['first_name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_name(data['last_name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_country_code(data['country_code'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_phone_number(data['phone_number'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_email(data['email'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_university(data['university'])) != True:
+        show_error(message)
+        return False
+    # if (message := Validation.is_valid_barcode(data['barcode'])) != True:
+    #     print(message)
+    #     return False
+    return True
 
 
 class StudentEditView(tk.Toplevel):
@@ -163,20 +196,21 @@ class StudentEditView(tk.Toplevel):
                         self.data[key] = value
                 except KeyError:
                     self.data[key] = value
-            print(self.data)
-            if DataController.update_student(
-                id=self.student._student_data[self.student._student_columns[0]],
-                fname=self.data['first_name'],
-                lname=self.data['last_name'],
-                gender=self.data['gender'],
-                country=self.data['country_code'],
-                phone=self.data['phone_number'],
-                email=self.data['email'],
-                address=self.data['address'],
-                university=self.data['university'],
-                barcode=self.data['barcode']
-            ):
-                back_btn_pressed()
+            # print(self.data)
+            if validate_data(self.data):
+                if DataController.add_new_student(
+                    fname=self.data['first_name'],
+                    lname=self.data['last_name'],
+                    gender=self.data['gender'],
+                    country=self.data['country_code'],
+                    phone=self.data['phone_number'],
+                    email=self.data['email'],
+                    address=self.data['address'],
+                    university=self.data['university'],
+                    barcode=self.data['barcode']
+                ):
+                    back_btn_pressed()
+                    
         def delete_student():
             # show confirmation pop_up
             message = "Are you sure you want to delete the student?"

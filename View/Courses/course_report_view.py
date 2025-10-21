@@ -206,6 +206,12 @@ class CourseReportView(tk.Toplevel):
         
         reload_table()
 
+        # ==========================
+        # Chart 7:
+        # ==========================
+        tab7 = ttk.Frame(notebook)
+        notebook.add(tab7, text="Detailed Analysis")
+        self.view_analysis(tab7)
 
         # ==========================
         # Chart 9: Coming Soon!

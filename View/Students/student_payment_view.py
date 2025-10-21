@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
@@ -13,7 +13,30 @@ import DB
 from Controller import DataController,PopupHandler
 from datetime import datetime
 from lib.DateModule import DatePicker
+from Controller.Validation import Validation
 
+def show_error(message: str):
+    messagebox.showerror(
+            "Invalid Entry",
+            message
+    )
+
+def validate_data(data: dict) -> bool:
+    # Example validation: Ensure required fields are filled
+    message = ""
+    if (message := Validation.is_valid_course_name(data['Course Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_payment_amount(data['Paid Amount'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_payment_type(data['Payment Type'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_transaction_date(data['Transaction Date'])) != True:
+        show_error(message)
+        return False
+    return True
 
 class StudentPaymentView(tk.Toplevel):
     def __init__(self, parent, student: Student):
@@ -395,12 +418,13 @@ class StudentPaymentView(tk.Toplevel):
             paid = self.entry['Paid Amount']
             pay_type = self.entry['Payment Type']
             tran_date = self.entry['Transaction Date']
-            if action == "confirm":
-                DataController.confirm_payment(sID, cName, paid, pay_type, tran_date)
-            elif action == "update":
-                DataController.update_payment(self.paymentID, sID, cName, paid, pay_type, tran_date)
-            hide_payment_operation_table()
-            reload_data()
+            if validate_data(self.entry):
+                if action == "confirm":
+                    DataController.confirm_payment(sID, cName, paid, pay_type, tran_date)
+                elif action == "update":
+                    DataController.update_payment(self.paymentID, sID, cName, paid, pay_type, tran_date)
+                hide_payment_operation_table()
+                reload_data()
 
         def edit_transaction():
             confirm_payment('update')

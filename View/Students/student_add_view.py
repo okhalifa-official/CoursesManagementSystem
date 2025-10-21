@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
@@ -8,27 +8,37 @@ from Controller import DataController
 import Router.route as _r
 from Controller.Validation import Validation
 
+def show_error(message: str):
+    messagebox.showerror(
+            "Invalid Entry",
+            message
+    )
 
 def validate_data(data: dict) -> bool:
     # Example validation: Ensure required fields are filled
     message = ""
     if (message := Validation.is_valid_name(data['first_name'])) != True:
-        print(message)
-    elif (message := Validation.is_valid_name(data['last_name'])) != True:
-        print(message)
-    elif (message := Validation.is_valid_country_code(data['country_code'])) != True:
-        print(message)
-    elif (message := Validation.is_valid_phone_number(data['phone_number'])) != True:
-        print(message)
-    elif (message := Validation.is_valid_email(data['email'])) != True:
-        print(message)
-    elif (message := Validation.is_valid_university(data['university'])) != True:
-        print(message)
-    # elif (message := Validation.is_valid_barcode(data['barcode'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_name(data['last_name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_country_code(data['country_code'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_phone_number(data['phone_number'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_email(data['email'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_university(data['university'])) != True:
+        show_error(message)
+        return False
+    # if (message := Validation.is_valid_barcode(data['barcode'])) != True:
     #     print(message)
-    else:
-        return True
-    return False
+    #     return False
+    return True
 
 
 class StudentAddView(tk.Toplevel):
@@ -154,7 +164,7 @@ class StudentAddView(tk.Toplevel):
                         self.data[key] = value
                 except KeyError:
                     self.data[key] = value
-            print(self.data)
+            # print(self.data)
             if validate_data(self.data):
                 if DataController.add_new_student(
                     fname=self.data['first_name'],

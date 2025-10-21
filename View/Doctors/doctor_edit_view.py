@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
@@ -8,7 +8,33 @@ from DataModel import Doctor
 from Controller import DataController, PopupHandler
 import DataArchitecture as DataArch
 import Router.route as _r
+from Controller.Validation import Validation
 
+def show_error(message: str):
+    messagebox.showerror(
+            "Invalid Entry",
+            message
+    )
+
+def validate_data(data: dict) -> bool:
+    # Example validation: Ensure required fields are filled
+    message = ""
+    if (message := Validation.is_valid_name(data['first_name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_name(data['last_name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_country_code(data['country_code'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_phone_number(data['phone_number'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_email(data['email'])) != True:
+        show_error(message)
+        return False
+    return True
 
 class DoctorEditView(tk.Toplevel):
     def __init__(self,parent, doctor: Doctor):
@@ -112,17 +138,18 @@ class DoctorEditView(tk.Toplevel):
                         self.data[key] = value
                 except KeyError:
                     self.data[key] = value
-            print(self.data)
-            if DataController.update_doctor(
-                id=self.doctor._doctor_data[self.doctor._doctor_columns[0]],
-                fname=self.data['first_name'],
-                lname=self.data['last_name'],
-                gender=self.data['gender'],
-                country=self.data['country_code'],
-                phone=self.data['phone_number'],
-                email=self.data['email']
-            ):
-                back_btn_pressed()
+
+            if validate_data(self.data):
+                if DataController.update_doctor(
+                    id=self.doctor._doctor_data[self.doctor._doctor_columns[0]],
+                    fname=self.data['first_name'],
+                    lname=self.data['last_name'],
+                    gender=self.data['gender'],
+                    country=self.data['country_code'],
+                    phone=self.data['phone_number'],
+                    email=self.data['email']
+                ):
+                    back_btn_pressed()
 
         def delete_doctor():
             # show confirmation pop_up

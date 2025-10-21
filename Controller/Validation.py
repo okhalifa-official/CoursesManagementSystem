@@ -7,6 +7,8 @@ class Validation:
     @staticmethod
     def is_valid_date(date_str):
         # Implement date validation logic
+        if date_str is None:
+            return "Date field is required."
         if isinstance(date_str, datetime):
             return True
         if isinstance(date_str, str):
@@ -46,7 +48,8 @@ class Validation:
         # Implement country code validation logic
         if isinstance(country_code, str):
             # Match a string starting with '+' followed by 1 to 3 digits
-            return bool(re.fullmatch(r"\+\d{1,3}", country_code))
+            if bool(re.fullmatch(r"\+\d{1,3}", country_code)):
+                return True
         return "Invalid country code format. Expected format: +123"
 
     @staticmethod
@@ -54,7 +57,8 @@ class Validation:
         # Implement phone validation logic
         if isinstance(phone_number, str):
             # Match a string with 10 to 15 digits
-            return bool(re.fullmatch(r"\d{10,15}", phone_number))
+            if bool(re.fullmatch(r"\d{10,15}", phone_number)):
+                return True
         return "Invalid phone number format. Expected format: 1234567890 (with 10 to 15 digits)"
 
     @staticmethod
@@ -75,22 +79,28 @@ class Validation:
     @staticmethod
     def is_valid_payment_amount(amount):
         # Implement payment amount validation logic
+        try:
+            if isinstance(amount, str):
+                amount = float(amount)
+        except ValueError:
+            return "Invalid payment amount. Amount must be a non-negative number."
         if isinstance(amount, (int, float)):
             if amount >= 0:
                 return True
-        return False
+        return "Invalid payment amount. Amount must be a non-negative number."
 
     @staticmethod
     def is_valid_transaction_date(trans_date):
         # Implement transaction date validation logic
-        if Validation.is_valid_date(trans_date):
+        message = ''
+        if message := Validation.is_valid_date(trans_date):
             # Check if the date is not in the future
             if isinstance(trans_date, str):
                 trans_date = datetime.strptime(trans_date, "%Y-%m-%d")
             if trans_date > datetime.now():
-                return False
+                return "Invalid transaction date. Date cannot be in the future."
             return True
-        return False
+        return message
 
     @staticmethod
     def is_valid_payment_type(pay_type):
@@ -98,7 +108,7 @@ class Validation:
         if isinstance(pay_type, str):
             if len(pay_type) > 0:
                 return True
-        return False
+        return "Invalid payment type. Payment type cannot be empty."
 
     @staticmethod
     def is_valid_course_name(course_name):
@@ -106,31 +116,31 @@ class Validation:
         if isinstance(course_name, str):
             if len(course_name) > 0:
                 return True
-        return False
+        return "Invalid course name. Course name cannot be empty."
 
     @staticmethod
-    def is_valid_doctor_id(doc_id):
-        # Implement doctor ID validation logic
-        if isinstance(doc_id, str):
-            if len(doc_id) > 0 and all(x.isalnum() for x in doc_id):
+    def is_valid_doctor_name(doctor_name):
+        # Implement doctor name validation logic
+        if isinstance(doctor_name, str):
+            if len(doctor_name) > 0 and all(x.isalpha() or x.isspace() for x in doctor_name):
                 return True
-        return False
+        return "Invalid doctor name. Doctor name must contain only alphabetic characters."
     
     @staticmethod
     def is_valid_start_date(start_date):
         # Implement start date validation logic
-        if Validation.is_valid_date(start_date):
+        if Validation.is_valid_date(start_date) == True:
             # Check if the date is not in the future
             if isinstance(start_date, str):
                 start_date = datetime.strptime(start_date, "%Y-%m-%d")
             if start_date > datetime.now():
-                return False
+                return "Invalid start date. Date cannot be in the future."
             return True
-        return False
+        return "Invalid date format. Expected YYYY-MM-DD."
 
     @staticmethod
     def is_valid_end_date(end_date):
         # Implement end date validation logic
-        if Validation.is_valid_date(end_date):
+        if Validation.is_valid_date(end_date) == True:
             return True
-        return False
+        return "Invalid date format. Expected YYYY-MM-DD."

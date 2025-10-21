@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 from datetime import datetime
 import os,sys
@@ -7,8 +7,35 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 import DataArchitecture as DataArch
 import Router.route as _r
 from Controller import DataController
+from Controller.Validation import Validation
 
 from lib.DateModule import DatePicker
+
+def show_error(message: str):
+    messagebox.showerror(
+            "Invalid Entry",
+            message
+    )
+
+def validate_data(data: dict) -> bool:
+    # Example validation: Ensure required fields are filled
+    message = ""
+    if (message := Validation.is_valid_course_name(data['name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_doctor_name(data['doctor_name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_payment_amount(data['price'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_start_date(data['start_date'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_end_date(data['end_date'])) != True:
+        show_error(message)
+        return False
+    return True
 
 
 class CourseAddView(tk.Toplevel):
@@ -105,10 +132,6 @@ class CourseAddView(tk.Toplevel):
                     case 'date':
                         # Use custom DatePicker (Entry + Calendar) to avoid DateEntry freeze issues
                         init_date = None
-                        try:
-                            init_date = datetime.strptime(course._course_data[label_text], "%Y-%m-%d").date()
-                        except Exception:
-                            init_date = None
 
                         datepicker = DatePicker(fields_frame, date_pattern="yyyy-mm-dd", initial_date=init_date)
                         datepicker.grid(row=r, column=1, padx=20, sticky="w")
@@ -158,16 +181,16 @@ class CourseAddView(tk.Toplevel):
                         self.data[key] = value
                 except KeyError:
                     self.data[key] = value
-            print(self.data)
-            if DataController.add_new_course(
-                name=self.data['name'],
-                doc_name=self.data['doctor_name'],
-                price=self.data['price'],
-                s_date=self.data['start_date'],
-                e_date=self.data['end_date']
-            ):
-                back_btn_pressed()
-            # print(self.data)
+
+            if validate_data(self.data):
+                if DataController.add_new_course(
+                    name=self.data['name'],
+                    doc_name=self.data['doctor_name'],
+                    price=self.data['price'],
+                    s_date=self.data['start_date'],
+                    e_date=self.data['end_date']
+                ):
+                    back_btn_pressed()
         
         create_btn = ttk.Button(right_vertical_stack, text="Create",
                     command=create_course)

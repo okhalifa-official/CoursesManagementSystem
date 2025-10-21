@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 from datetime import datetime
 import os,sys
@@ -9,9 +9,35 @@ from DataModel import Course
 from Controller import DataController, PopupHandler
 import DataArchitecture as DataArch
 import Router.route as _r
+from Controller.Validation import Validation
 
 from lib.DateModule import DatePicker
 
+def show_error(message: str):
+    messagebox.showerror(
+            "Invalid Entry",
+            message
+    )
+
+def validate_data(data: dict) -> bool:
+    # Example validation: Ensure required fields are filled
+    message = ""
+    if (message := Validation.is_valid_course_name(data['name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_doctor_name(data['doctor_name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_payment_amount(data['price'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_start_date(data['start_date'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_end_date(data['end_date'])) != True:
+        show_error(message)
+        return False
+    return True
 
 
 class CourseEditView(tk.Toplevel):
@@ -198,16 +224,18 @@ class CourseEditView(tk.Toplevel):
                         self.data[key] = value
                 except KeyError:
                     self.data[key] = value
-            print(self.data)
-            if DataController.update_course(
-                id=self.course._course_data[self.course._course_columns[0]],
-                name=self.data['name'],
-                doc_name=self.data['doctor_name'],
-                price=self.data['price'],
-                s_date=self.data['start_date'],
-                e_date=self.data['end_date']
-            ):
-                back_btn_pressed()
+            
+            if validate_data(self.data):
+                if DataController.update_course(
+                    id=self.course._course_data[self.course._course_columns[0]],
+                    name=self.data['name'],
+                    doc_name=self.data['doctor_name'],
+                    price=self.data['price'],
+                    s_date=self.data['start_date'],
+                    e_date=self.data['end_date']
+                ):
+                    back_btn_pressed()
+            
         def delete_course():
             # show confirmation pop_up
             message = "Are you sure you want to delete this course?"
