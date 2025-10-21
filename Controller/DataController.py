@@ -473,3 +473,25 @@ def load_table(table_name, entry):
                 """
                 ]
         return load_data_with_args(From=['student_course c'], Where=where, Value=[entry['Student ID'], 0], Operations=[' = ',' > '], Columns=columns)
+    elif table_name == 'student_course_all':
+        columns = [
+            "c.course_name AS 'Course Name'",
+
+            "c.course_price || ' EGP' AS 'Price'",
+
+            """(SELECT SUM(p.amount_paid)
+            FROM payments p
+            WHERE p.student_course_id = c.id) || ' EGP' AS Paid""",
+
+            """(c.course_price - IFNULL((
+            SELECT SUM(p.amount_paid)
+            FROM payments p
+            WHERE p.student_course_id = c.id
+            ), 0)) || ' EGP' AS Remaining""",
+
+            "c.enrollment_date AS 'Enrolled At'"
+        ]
+        where = [
+                    'c.student_id'
+                ]
+        return load_data_with_args(From=['student_course c'], Where=where, Value=[entry['Student ID']], Operations=[' = '], Columns=columns)
