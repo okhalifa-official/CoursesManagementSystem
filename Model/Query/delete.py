@@ -6,8 +6,13 @@ def delete(database, table, ids):
     for i in range(1,len(ids)):
         query += f"OR id = {ids[i]} "
     cursor = database.cursor()
-    cursor.execute(query)
-    database.commit()
+    try:
+        cursor.execute(query)
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed deleting records: {error}")
+        return False
 
 def delete_enrollemnts_with_no_payments(database):
     query = """
@@ -19,5 +24,10 @@ def delete_enrollemnts_with_no_payments(database):
         );
     """
     cursor = database.cursor()
-    cursor.execute(query)
-    database.commit()
+    try:
+        cursor.execute(query)
+        database.commit()
+        return True
+    except Exception as error:
+        print(f"Failed deleting enrollments with no payments: {error}")
+        return False

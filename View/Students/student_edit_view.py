@@ -1,47 +1,13 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk # type: ignore
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
-from DataModel import Student
+from Model.DataModel import Student
 from Controller import DataController, PopupHandler
-import DataArchitecture as DataArch
+import Model.DataArchitecture as DataArch
 import Router.route as _r
-from Controller.Validation import Validation
-
-def show_error(message: str):
-    messagebox.showerror(
-            "Invalid Entry",
-            message
-    )
-
-def validate_data(data: dict) -> bool:
-    # Example validation: Ensure required fields are filled
-    message = ""
-    if (message := Validation.is_valid_name(data['First Name'])) != True:
-        show_error(message)
-        return False
-    if (message := Validation.is_valid_name(data['Last Name'])) != True:
-        show_error(message)
-        return False
-    if (message := Validation.is_valid_country_code(data['Country Code'])) != True:
-        show_error(message)
-        return False
-    if (message := Validation.is_valid_phone_number(data['Phone Number'])) != True:
-        show_error(message)
-        return False
-    if (message := Validation.is_valid_email(data['Email'])) != True:
-        show_error(message)
-        return False
-    if (message := Validation.is_valid_university(data['University'])) != True:
-        show_error(message)
-        return False
-    # if (message := Validation.is_valid_barcode(data['Barcode'])) != True:
-    #     print(message)
-    #     return False
-    return True
-
 
 class StudentEditView(tk.Toplevel):
     def __init__(self, parent, student: Student):
@@ -53,12 +19,21 @@ class StudentEditView(tk.Toplevel):
         self.student = student
 
     def load(self):
+        # load student edit view
         student = self.student
+        
+        # Initialize UI Element holders and Placeholders
         elements = DataArch.add_student_elements
         placeholder = DataArch.add_student_elements_placeholders
+        
+        # Initialize Entry Objects {element_name: widget}
         self.entry = {}
-        self.data = {}
 
+        # Initialize Actual Entry Values
+        self.data = {}
+        self.data['ID'] = student._student_data[student._student_columns[0]]
+
+        # Back Button Handling
         def back_btn_pressed():
             _r.route_back(self)
 
@@ -66,11 +41,12 @@ class StudentEditView(tk.Toplevel):
                     command=back_btn_pressed)
         back_btn.pack(side="top", anchor="w", pady=10, padx=10)
 
+        # Initialize Student Card (Main) Frame
         student_card = ttk.Frame(self)
         student_card.pack(expand=True, fill="both", anchor="center")
-        # student_card.place(relx=.5, rely=.5, anchor="c")
 
         #---------------- Student Card
+        # Create vertical stack inside student card
         vertical_stack = tk.Frame(student_card)
         vertical_stack.pack(expand=True, fill="both", anchor="center")
         vertical_stack.place(relx=.5, rely=.5, anchor="c")
@@ -120,29 +96,39 @@ class StudentEditView(tk.Toplevel):
         img_btn = ttk.Button(vertical_stack, text="Select Image", command=select_image, width=10)
         img_btn.pack(pady=5, anchor="center")
 
+        
+        # Create entry fields frame below student image
         fields_frame = ttk.Labelframe(vertical_stack, text="")
         fields_frame.pack(pady=0, anchor="center")
         
         #--------------- Edit Student Fields
+        # Create entry fields for each element
         for r, row in enumerate(elements):
+            # loop on all elements in the row
             for c,col in enumerate(row):
-                # fields_frame.grid_rowconfigure(r, weight=1)
-
+                # Create Label for the field
                 label_text = list(col.keys())[0]
                 label = ttk.Label(fields_frame, text=f"{label_text}")
                 label.grid(row=r, column=0, pady=15, padx=30, sticky="w")
                 
+                # Create appropriate input widget based on type
                 values = list(col.values())
                 if type(values[0]).__name__ == 'list':
+                    # handle list of options (e.g., for radio buttons)
                     values = values[0]
+                
+                # Determine the type of the field
                 val = values[0]
 
                 match val:
                     case 'radio':
                         radio_frame = ttk.Frame(fields_frame)
                         radio_frame.grid(row=r, column=1)
+                        # Create radio buttons for each option
                         options = values[1:]
+                        # Create a StringVar to hold the selected option
                         radio_var = tk.StringVar()
+                        # Set existing value or default
                         if student._student_data[label_text]:
                             radio_var.set(student._student_data[label_text])
                         else:
@@ -154,12 +140,17 @@ class StudentEditView(tk.Toplevel):
                     case _:
                         entry_widget = ttk.Entry(fields_frame)
                         entry_widget.grid(row=r, column=1, padx=20)
+
+                        # Set existing value or placeholder text
                         if student._student_data[label_text]:
                             entry_widget.insert(0, student._student_data[label_text])
                             entry_widget.config(foreground="")
                         else:
-                            entry_widget.insert(0, placeholder[label_text]) # placeholder
+                            # Placeholder text
+                            entry_widget.insert(0, placeholder[label_text])
                             entry_widget.config(foreground="grey")
+
+                        # Placeholder handling on focus in/out
                         def on_focus_in(event, e=entry_widget, ph=placeholder[label_text]):
                             if e.get() == ph:
                                 e.delete(0, tk.END)
@@ -170,61 +161,25 @@ class StudentEditView(tk.Toplevel):
                                 e.config(foreground="grey")
                         entry_widget.bind("<FocusIn>", on_focus_in)
                         entry_widget.bind("<FocusOut>", on_focus_out)
+
+                        # Store the entry widget in the dictionary
                         self.entry[label_text] = entry_widget
                         
-                #print(values)
-        def update_student():
-            print("hello world")
-            # store all new student data in self.data{}
-            for key, widget in self.entry.items():
-                # skip image --- just for testing (fix later)
-                if key == 'Student Image':
-                    continue
-                # Handle different widget types
-                if isinstance(widget, ttk.Entry):
-                    value = widget.get()
-                elif isinstance(widget, tk.StringVar):
-                    value = widget.get()
-                elif isinstance(widget, ttk.Radiobutton):
-                    # For radiobuttons, get the value from the associated StringVar
-                    continue  # Skip individual radiobuttons, use the StringVar stored with the group label
-                else:
-                    value = widget
-                self.data[key] = None
-                try:
-                    if value != placeholder[key]:
-                        self.data[key] = value
-                except KeyError:
-                    self.data[key] = value
-            # print(self.data)
-            if validate_data(self.data):
-                if DataController.add_new_student(
-                    fname=self.data['First Name'],
-                    lname=self.data['Last Name'],
-                    gender=self.data['Gender'],
-                    country=self.data['Country Code'],
-                    phone=self.data['Phone Number'],
-                    email=self.data['Email'],
-                    address=self.data['Address'],
-                    university=self.data['University'],
-                    barcode=self.data['Barcode']
-                ):
-                    back_btn_pressed()
-                    
-        def delete_student():
-            # show confirmation pop_up
-            message = "Are you sure you want to delete the student?"
-            confirmation_text = "Delete"
-            result = PopupHandler.confirmation_popup(self, title="Delete Student", message=message, button1_text="Cancel", button2_text=confirmation_text)
-            if result:
-                print("delete")
-                if DataController.delete_student(
-                    id=self.student._student_data[self.student._student_columns[0]]
-                ):
-                    back_btn_pressed()
-            else:
-                print("canceled")
+        def on_update_student():
+            # on update button press call update_student from data controller
+            if DataController.func_student(func=DataController.update_student,
+                entry=self.entry, 
+                data=self.data, 
+                placeholder=placeholder
+            ):
+                back_btn_pressed()
         
+        def on_delete_student():
+            # on delete button press call delete_student from data controller
+            if DataController.delete_student(window=self, student_id=self.data['ID']):
+                back_btn_pressed()
+        
+        #--------------- Action Buttons Frame
         btn_frame = ttk.Frame(vertical_stack)
         btn_frame.pack(side="top", pady=25, fill="x", anchor="center")
 
@@ -232,13 +187,13 @@ class StudentEditView(tk.Toplevel):
             btn_frame,
             text="Delete",
             fg='red',
-            command=delete_student
+            command=on_delete_student
         )
         delete_btn.grid(row=0, column=0, sticky="w")
 
-        create_btn = ttk.Button(btn_frame, text="Save Changes",
-                    command=update_student)
-        create_btn.grid(row=0, column=1, padx=30, sticky="e")
+        update_btn = ttk.Button(btn_frame, text="Save Changes",
+                    command=on_update_student)
+        update_btn.grid(row=0, column=1, padx=30, sticky="e")
 
     def view(self):
         self.lift()

@@ -2,9 +2,13 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model', 'Query'))
+import tkinter as tk
+from tkinter import ttk, filedialog, messagebox
+from Controller.Validation import Validation
+from Controller import PopupHandler
 
 from DB import db # type: ignore
-from Model.Query import select
+from Model.Query import select, delete
 
 database = db()
 
@@ -127,7 +131,7 @@ def add_new_payment(sID, course_name, paid, pay_type, date):
     database.commit()
     return True
 
-def confirm_payment(sID, course_name, paid, pay_type, date):
+def confirm_payment(pID, sID, course_name, paid, pay_type, date):
     # check if is already enrolled
     if not is_student_enrolled_to(sID, course_name):
         # enroll student to course
@@ -140,7 +144,7 @@ def confirm_payment(sID, course_name, paid, pay_type, date):
     # pay amount to student_course table
     add_new_payment(sID, course_name, paid, pay_type, date)
 
-def update_payment(payID, sID, course_name, paid, pay_type, date):
+def update_payment(pID, sID, course_name, paid, pay_type, date):
     cursor = database.cursor()
     # Get the student_course id for this student and course
     cursor.execute("""
@@ -159,14 +163,14 @@ def update_payment(payID, sID, course_name, paid, pay_type, date):
             UPDATE payments
             SET student_id = ?, student_course_id = ?, payment_date = ?, payment_type = ?, amount_paid = ?
             WHERE id = ?
-        """, (sID, student_course_id, date, pay_type, paid, payID))
+        """, (sID, student_course_id, date, pay_type, paid, pID))
         database.commit()
         return True
     except Exception as error:
         print(f"Failed updating payment: {error}")
         return False
 
-def add_new_student(fname, lname, gender, country, phone, address=None, email=None, university=None, barcode=None):
+def add_new_student(id, fname, lname, gender, country, phone, address=None, email=None, university=None, barcode=None):
     cursor = database.cursor()
     try:
         cursor.execute("""
@@ -192,19 +196,6 @@ def update_student(id, fname, lname, gender, country, phone, address, email, uni
         return True
     except Exception as error:
         print(f"Failed updating student: {error}")
-        return False
-        
-def delete_student(id):
-    cursor = database.cursor()
-    try:
-        cursor.execute("""
-                        DELETE FROM students
-                        WHERE id = ?
-                       """, (id,))
-        database.commit()
-        return True
-    except Exception as error:
-        print(f"Failed deleting student: {error}")
         return False
     
 def add_new_doctor(fname, lname, gender, country, phone, email=None):
@@ -315,3 +306,170 @@ def get_doctors_names_id():
         ids.append(rec[0])
 
     return names,ids
+
+#######################################
+
+# DATA CONTROLLER ####################
+
+def show_error(message: str):
+    messagebox.showerror(
+            "Invalid Entry",
+            message
+    )
+
+def student_validate_data(data: dict) -> bool:
+    # Ensure required fields are filled with valid data
+    message = ""
+    if (message := Validation.is_valid_name(data['First Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_name(data['Last Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_country_code(data['Country Code'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_phone_number(data['Phone Number'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_email(data['Email'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_university(data['University'])) != True:
+        show_error(message)
+        return False
+    # if (message := Validation.is_valid_barcode(data['Barcode'])) != True:
+    #     print(message)
+    #     return False
+    return True
+
+def payment_validate_data(data: dict) -> bool:
+    # Example validation: Ensure required fields are filled
+    message = ""
+    if (message := Validation.is_valid_course_name(data['Course Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_payment_amount(data['Paid Amount'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_payment_type(data['Payment Type'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_transaction_date(data['Transaction Date'])) != True:
+        show_error(message)
+        return False
+    return True
+
+def func_student(func, entry, data, placeholder):
+    # store all new student data in self.data{}
+    for key, widget in entry.items():
+        # skip image --- just for testing (fix later)
+        if key == 'Student Image':
+            continue
+        # Handle different widget types
+        if isinstance(widget, ttk.Entry):
+            value = widget.get()
+        elif isinstance(widget, tk.StringVar):
+            value = widget.get()
+        elif isinstance(widget, ttk.Radiobutton):
+            # For radiobuttons, get the value from the associated StringVar
+            continue  # Skip individual radiobuttons, use the StringVar stored with the group label
+        else:
+            value = widget
+        data[key] = None
+        try:
+            if value != placeholder[key]:
+                data[key] = value
+        except KeyError:
+            data[key] = value
+    
+    if student_validate_data(data):
+        if func(
+            id = data.get('ID', None),
+            fname=data['First Name'],
+            lname=data['Last Name'],
+            gender=data['Gender'],
+            country=data['Country Code'],
+            phone=data['Phone Number'],
+            email=data['Email'],
+            address=data['Address'],
+            university=data['University'],
+            barcode=data['Barcode']
+        ):
+            return True
+    return False
+
+def delete_student(window, student_id):
+    # show confirmation pop_up
+    message = "Are you sure you want to delete the student?"
+    confirmation_text = "Delete"
+    result = PopupHandler.confirmation_popup(window, title="Delete Student", message=message, button1_text="Cancel", button2_text=confirmation_text)
+    if result:
+        if delete.delete(database, 'students', [student_id]):
+            return True
+    return False
+
+def func_payment(func, entry):
+    # You can now use self.entry to insert the payment into the database or further processing
+    pID = entry.get('Payment ID', None)
+    sID = entry['Student ID']
+    cName = entry['Course Name']
+    paid = entry['Paid Amount']
+    pay_type = entry['Payment Type']
+    tran_date = entry['Transaction Date']
+    if payment_validate_data(entry):
+        func(
+            pID=pID,
+            sID=sID,
+            course_name=cName,
+            paid=paid,
+            pay_type=pay_type,
+            date=tran_date
+        )
+        return True
+    return False
+
+def delete_payment(window, paymentID):
+    title = "Delete Transaction"
+    message = "Are you sure?"
+    if PopupHandler.confirmation_popup(window, title=title, message=message):
+        if delete.delete(database, 'payments', [paymentID]):
+            delete.delete_enrollemnts_with_no_payments(database)
+            return True
+    return False
+
+def load_table(table_name, entry):
+    # Filter and load matching rows
+    if table_name == 'payments':
+        columns = [
+            "p.id AS ID",
+            "sc.course_name AS 'Course Name'",
+            "p.amount_paid || ' EGP' AS 'Amount Paid'",
+            "p.payment_type AS 'Payment Type'",
+            "sc.course_price || ' EGP' AS 'Total'",
+            "p.payment_date AS 'Transaction Date'"
+        ]
+        return load_data_with_args(From=['student_course sc', 'students s', 'payments p'], Where=['s.id', 'p.student_course_id', 's.id'], Value=['sc.student_id', 'sc.id', entry['Student ID']], Columns=columns)
+    elif table_name == 'student_course':
+        columns = [
+            "c.course_name AS 'Course Name'",
+
+            """(c.course_price - IFNULL((
+            SELECT SUM(p.amount_paid)
+            FROM payments p
+            WHERE p.student_course_id = c.id
+            ), 0)) || ' EGP' AS Remaining""",
+
+            "c.enrollment_date AS 'Date'"
+        ]
+        where = [
+                    'c.student_id',
+
+                    """(c.course_price - IFNULL((
+                    SELECT SUM(p.amount_paid)
+                    FROM payments p
+                    WHERE p.student_course_id = c.id
+                ), 0))
+                """
+                ]
+        return load_data_with_args(From=['student_course c'], Where=where, Value=[entry['Student ID'], 0], Operations=[' = ',' > '], Columns=columns)
