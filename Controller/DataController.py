@@ -1,12 +1,13 @@
 import sys
 import os
+
+from View.Courses.course_add_view import validate_data
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model', 'Query'))
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from Controller.Validation import Validation
 from Controller import PopupHandler
-
 from DB import db # type: ignore
 from Model.Query import select, delete
 
@@ -198,7 +199,7 @@ def update_student(id, fname, lname, gender, country, phone, address, email, uni
         print(f"Failed updating student: {error}")
         return False
     
-def add_new_doctor(fname, lname, gender, country, phone, email=None):
+def add_new_doctor(dID, fname, lname, gender, country, phone, email=None):
     cursor = database.cursor()
     try:
         cursor.execute("""
@@ -211,7 +212,7 @@ def add_new_doctor(fname, lname, gender, country, phone, email=None):
         print(f"Failed creating new doctor: {error}")
         return False
     
-def update_doctor(id, fname, lname, gender, country, phone, email):
+def update_doctor(dID, fname, lname, gender, country, phone, email):
     cursor = database.cursor()
     try:
         cursor.execute("""
@@ -360,6 +361,25 @@ def payment_validate_data(data: dict) -> bool:
         return False
     return True
 
+def doctor_validate_data(data: dict) -> bool:
+    message = ""
+    if (message := Validation.is_valid_name(data['First Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_name(data['Last Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_email(data['Email'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_country_code(data['Country Code'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_phone_number(data['Phone Number'])) != True:
+        show_error(message)
+        return False
+    return True
+
 def func_student(func, entry, data, placeholder):
     # store all new student data in self.data{}
     for key, widget in entry.items():
@@ -495,3 +515,58 @@ def load_table(table_name, entry):
                     'c.student_id'
                 ]
         return load_data_with_args(From=['student_course c'], Where=where, Value=[entry['Student ID']], Operations=[' = '], Columns=columns)
+    # elif table_name == 'doctors':
+        
+
+def doctor_validate_data(data: dict) -> bool:
+    # Example validation: Ensure required fields are filled
+    message = ""
+    if (message := Validation.is_valid_name(data['First Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_name(data['Last Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_country_code(data['Country Code'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_phone_number(data['Phone Number'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_email(data['Email'])) != True:
+        show_error(message)
+        return False
+    return True
+
+
+def func_doctor(func, entry, data, placeholder):
+    # store all new doctor data in self.data{}
+    for key, widget in entry.items():
+        # Handle different widget types
+        if isinstance(widget, ttk.Entry):
+            value = widget.get()
+        elif isinstance(widget, tk.StringVar):
+            value = widget.get()
+        elif isinstance(widget, ttk.Radiobutton):
+            # For radiobuttons, get the value from the associated StringVar
+            continue  # Skip individual radiobuttons, use the StringVar stored with the group label
+        else:
+            value = widget
+        data[key] = None
+        try:
+            if value != placeholder[key]:
+                data[key] = value
+        except KeyError:
+            data[key] = value
+
+    if doctor_validate_data(data):
+        if func(
+            dID=data.get('ID', None),
+            fname=data['First Name'],
+            lname=data['Last Name'],
+            gender=data['Gender'],
+            country=data['Country Code'],
+            phone=data['Phone Number'],
+            email=data['Email']
+        ):
+            return True
