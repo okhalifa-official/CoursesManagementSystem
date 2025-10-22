@@ -6,7 +6,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 from Controller import DataController
 import Model.DataArchitecture as DataArch
 import Router.route as _r
-from Controller.Validation import Validation
 
 class DoctorAddView(tk.Toplevel):
     def __init__(self,parent):

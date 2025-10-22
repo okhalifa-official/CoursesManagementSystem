@@ -220,25 +220,13 @@ def update_doctor(dID, fname, lname, gender, country, phone, email):
             SET first_name = ?, last_name = ?, gender = ?, country_code = ?, 
                 phone_number = ?, email = ?
             WHERE id = ?
-        """, (fname, lname, gender, country, phone, email, id))
+        """, (fname, lname, gender, country, phone, email, dID))
         database.commit()
         return True
     except Exception as error:
         print(f"Failed updating doctor: {error}")
         return False
     
-def delete_doctor(id):
-    cursor = database.cursor()
-    try:
-        cursor.execute("""
-                        DELETE FROM doctors
-                        WHERE id = ?
-                       """, (id,))
-        database.commit()
-        return True
-    except Exception as error:
-        print(f"Failed deleting doctor: {error}")
-        return False
 
 def get_id_from_name(table_name, fullname):
     f_name,l_name = fullname.split()
@@ -570,3 +558,14 @@ def func_doctor(func, entry, data, placeholder):
             email=data['Email']
         ):
             return True
+        
+def delete_doctor(window, data):
+    # show confirmation pop_up
+    message = "Are you sure you want to delete this doctor?"
+    confirmation_text = "Delete"
+    result = PopupHandler.confirmation_popup(window, title="Delete Doctor", message=message, button1_text="Cancel", button2_text=confirmation_text)
+    if result:
+        print("delete")
+        if delete.delete(database, 'doctors', [data['ID']]):
+            return True
+    return False
