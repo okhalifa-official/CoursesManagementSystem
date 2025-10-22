@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk #type: ignore
 from datetime import datetime
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
@@ -9,35 +9,7 @@ from DataModel import Course
 from Controller import DataController, PopupHandler
 import DataArchitecture as DataArch
 import Router.route as _r
-from Controller.Validation import Validation
-
 from lib.DateModule import DatePicker
-
-def show_error(message: str):
-    messagebox.showerror(
-            "Invalid Entry",
-            message
-    )
-
-def validate_data(data: dict) -> bool:
-    # Example validation: Ensure required fields are filled
-    message = ""
-    if (message := Validation.is_valid_course_name(data['Course Name'])) != True:
-        show_error(message)
-        return False
-    if (message := Validation.is_valid_doctor_name(data['Doctor Name'])) != True:
-        show_error(message)
-        return False
-    if (message := Validation.is_valid_payment_amount(data['Price'])) != True:
-        show_error(message)
-        return False
-    if (message := Validation.is_valid_start_date(data['Start Date'])) != True:
-        show_error(message)
-        return False
-    if (message := Validation.is_valid_end_date(data['End Date'])) != True:
-        show_error(message)
-        return False
-    return True
 
 
 class CourseEditView(tk.Toplevel):
@@ -50,14 +22,18 @@ class CourseEditView(tk.Toplevel):
         self.course = course
         
     def load(self):
+        # load course edit view
         course = self.course
+        # Initialize UI Element holders and Placeholders
         elements = DataArch.add_course_elements
         doctors_name, doctors_id = DataController.get_doctors_names_id()
         placeholder = DataArch.add_course_elements_placeholders
+        # Initialize Entry Objects {element_name: widget}
         self.entry = {}
         self.data = {}
-        style = ttk.Style()
+        self.data['ID'] = course._course_data[course._course_columns[0]]
 
+        # Back Button Handling
         def back_btn_pressed():
             _r.route_back(self)
 
@@ -65,11 +41,13 @@ class CourseEditView(tk.Toplevel):
                     command=back_btn_pressed)
         back_btn.pack(side="top", anchor="w", pady=10, padx=10)
 
+        # Initialize Course Card (Main) Frame
         course_card = ttk.Frame(self)
         course_card.pack(expand=True, fill="both", anchor="center")
         course_card.place(relx=.5, rely=.5, anchor="c")
-
+        
         #---------------- Course Card
+        # Create left stack inside course card
         left_vertical_stack = tk.Frame(course_card)
         left_vertical_stack.pack(pady=20, side="left", fill="both", expand=True, anchor="w")
 
@@ -118,34 +96,42 @@ class CourseEditView(tk.Toplevel):
         img_btn = ttk.Button(left_vertical_stack, text="Select Image", command=select_image, width=10)
         img_btn.pack(fill="x", pady=(20,5), anchor="center")
 
+        # Create entry fields frame on the right side of course card
         right_vertical_stack = ttk.Frame(course_card)
         right_vertical_stack.pack(side="right", fill="both", expand=True, padx=(20,0), anchor="n")
+        
         fields_frame = ttk.Labelframe(right_vertical_stack, text="")
         fields_frame.pack(side="top", fill="both", expand=True)
-        
-        #--------------- Create New Course
-        for r, row in enumerate(elements):
-            for c,col in enumerate(row):
-                # fields_frame.grid_rowconfigure(r, weight=1)
 
+        #--------------- Create New Course
+        # Create entry fields for each element
+        for r, row in enumerate(elements):
+            # loop on all elements in the row
+            for c,col in enumerate(row):
+                # Add label text
                 label_text = list(col.keys())[0]
                 label = ttk.Label(fields_frame, text=f"{label_text}")
                 label.grid(row=r, column=0, pady=15, padx=30, sticky="w")
                 
                 values = list(col.values())
                 if type(values[0]).__name__ == 'list':
+                    # list of options for radio
                     values = values[0]
+                # Handle different input types
                 val = values[0]
                 match val:
                     case 'radio':
                         radio_frame = ttk.Frame(fields_frame)
                         radio_frame.grid(row=r, column=1)
+                        # Create radio buttons for each option
                         options = values[1:]
                         radio_var = tk.StringVar()
+                        # set existing value or default
                         if course._course_data[label_text]:
                             radio_var.set(course._course_data[label_text])
                         else:
                             radio_var.set(options[0])
+                        # Create radio buttons for each option
                         for i, option in enumerate(options):
                             self.entry[option] = ttk.Radiobutton(radio_frame, text=option, variable=radio_var, value=option)
                             self.entry[option].grid(row=0, column=i, padx=20)
@@ -155,11 +141,12 @@ class CourseEditView(tk.Toplevel):
                         entry_widget.grid(row=r, column=1, padx=20)
                         # Find the index of the doctor ID and set the corresponding name
                         doctor_id = course._course_data[label_text]
+                        # set existing value or placeholder
                         if doctor_id in doctors_id:
                             idx = doctors_id.index(doctor_id)
                             entry_widget.set(doctors_name[idx])
                         else:
-                            entry_widget.set(doctor_id)  # a default value
+                            entry_widget.set(doctor_id)
                         self.entry[label_text] = entry_widget
                     case 'date':
                         # Use custom DatePicker (Entry + Calendar) to avoid DateEntry freeze issues
@@ -174,15 +161,16 @@ class CourseEditView(tk.Toplevel):
                         self.entry[label_text] = datepicker
                     case _:
                         entry_widget = ttk.Entry(fields_frame)
+                        entry_widget.grid(row=r, column=1, padx=20)
+                        # Set existing value or placeholder text
                         if course._course_data[label_text]:
                             entry_widget.insert(0, course._course_data[label_text])
                             entry_widget.config(foreground="")
                         else:
                             entry_widget.insert(0, placeholder[label_text]) # placeholder
                             entry_widget.config(foreground="grey")
-                        entry_widget.grid(row=r, column=1, padx=20)
 
-                        # Placeholder function setup
+                        # Placeholder function setup for focus in/out
                         def on_focus_in(event, e=entry_widget, ph=placeholder[label_text]):
                             if e.get() == ph:
                                 e.delete(0, tk.END)
@@ -193,62 +181,20 @@ class CourseEditView(tk.Toplevel):
                                 e.config(foreground="grey")
                         entry_widget.bind("<FocusIn>", on_focus_in)
                         entry_widget.bind("<FocusOut>", on_focus_out)
+
                         self.entry[label_text] = entry_widget
-                #print(values)
 
-        def update_course():
-            # print("hello world")
-            # store all new course data in self.data{}
-            for key, widget in self.entry.items():
-                # DatePicker (custom)
-                if hasattr(widget, "entry") and isinstance(getattr(widget, "entry"), ttk.Entry):
-                    # e.g. DatePicker: .entry is the underlying entry widget
-                    value = widget.entry.get().strip()
-                elif isinstance(widget, tk.StringVar):
-                    value = widget.get()
-                elif isinstance(widget, ttk.Entry):
-                    value = widget.get()
-                elif isinstance(widget, ttk.Combobox):
-                    value = widget.get()
-                else:
-                    # fallback: whatever the widget is (e.g., radiobutton group stringvar earlier)
-                    try:
-                        value = widget.get()
-                    except Exception:
-                        value = widget
-
-                # store
-                self.data[key] = None
-                try:
-                    if value != placeholder[key]:
-                        self.data[key] = value
-                except KeyError:
-                    self.data[key] = value
+        def on_update_course():
+            if DataController.func_course(func=DataController.update_course,
+                entry=self.entry, 
+                data=self.data, 
+                placeholder=placeholder
+            ):
+                back_btn_pressed()
             
-            if validate_data(self.data):
-                if DataController.update_course(
-                    id=self.course._course_data[self.course._course_columns[0]],
-                    name=self.data['Course Name'],
-                    doc_name=self.data['Doctor Name'],
-                    price=self.data['Price'],
-                    s_date=self.data['Start Date'],
-                    e_date=self.data['End Date']
-                ):
-                    back_btn_pressed()
-            
-        def delete_course():
-            # show confirmation pop_up
-            message = "Are you sure you want to delete this course?"
-            confirmation_text = "Delete"
-            result = PopupHandler.confirmation_popup(self, title="Delete Course", message=message, button1_text="Cancel", button2_text=confirmation_text)
-            if result:
-                print("delete")
-                if DataController.delete_course(
-                    id=self.course._course_data[self.course._course_columns[0]]
-                ):
-                    back_btn_pressed()
-            else:
-                print("canceled")
+        def on_delete_course():
+           if DataController.delete_course(window=self, data=self.data):
+                back_btn_pressed()
         
         btn_frame = ttk.Frame(right_vertical_stack)
         btn_frame.pack(fill="x", pady=25, side="bottom", anchor="center")
@@ -257,20 +203,15 @@ class CourseEditView(tk.Toplevel):
             btn_frame,
             text="Delete",
             fg='red',
-            command=delete_course
+            command=on_delete_course
         )
         delete_btn.grid(row=0, column=0, sticky="w")
 
         create_btn = ttk.Button(btn_frame, text="Save Changes",
-                    command=update_course)
+                    command=on_update_course)
         create_btn.grid(row=0, column=1, padx=30, sticky="e")
     
     def view(self):
         self.lift()
         self.after(200, lambda: self.focus_force())  # delayed focus fix
         self.state('zoomed')
-
-        
-
-#cav = CourseAddView()
-# cav.mainloop()

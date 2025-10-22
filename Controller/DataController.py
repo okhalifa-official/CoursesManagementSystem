@@ -1,7 +1,6 @@
 import sys
 import os
 
-from View.Courses.course_add_view import validate_data
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model', 'Query'))
 import tkinter as tk
@@ -241,7 +240,7 @@ def get_id_from_name(table_name, fullname):
     print(result)
     return result[0]
 
-def add_new_course(name, doc_name, price, s_date, e_date):
+def add_new_course(cID, name, doc_name, price, s_date, e_date):
     docid = get_id_from_name("doctors", doc_name)
     cursor = database.cursor()
     try:
@@ -255,7 +254,7 @@ def add_new_course(name, doc_name, price, s_date, e_date):
         print(f"Failed creating new course: {error}")
         return False
     
-def update_course(id, name, doc_name, price, s_date, e_date):
+def update_course(cID, name, doc_name, price, s_date, e_date):
     docid = get_id_from_name("doctors", doc_name)
     cursor = database.cursor()
     try:
@@ -263,7 +262,7 @@ def update_course(id, name, doc_name, price, s_date, e_date):
             UPDATE courses 
             SET name = ?, doctor_id = ?, price = ?, start_date = ?, end_date = ?
             WHERE id = ?
-        """, (name, docid, price, s_date, e_date, id))
+        """, (name, docid, price, s_date, e_date, cID))
         database.commit()
         return True
     except Exception as error:
@@ -558,6 +557,7 @@ def func_doctor(func, entry, data, placeholder):
             email=data['Email']
         ):
             return True
+    return False
         
 def delete_doctor(window, data):
     # show confirmation pop_up
@@ -565,7 +565,76 @@ def delete_doctor(window, data):
     confirmation_text = "Delete"
     result = PopupHandler.confirmation_popup(window, title="Delete Doctor", message=message, button1_text="Cancel", button2_text=confirmation_text)
     if result:
-        print("delete")
         if delete.delete(database, 'doctors', [data['ID']]):
+            return True
+    return False
+
+def course_validate_data(data: dict) -> bool:
+    # Example validation: Ensure required fields are filled
+    message = ""
+    if (message := Validation.is_valid_course_name(data['Course Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_doctor_name(data['Doctor Name'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_payment_amount(data['Price'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_start_date(data['Start Date'])) != True:
+        show_error(message)
+        return False
+    if (message := Validation.is_valid_end_date(data['End Date'])) != True:
+        show_error(message)
+        return False
+    return True
+
+def func_course(func,entry,data,placeholder):
+    # store all new course data in self.data{}
+    for key, widget in entry.items():
+        # DatePicker (custom)
+        if hasattr(widget, "entry") and isinstance(getattr(widget, "entry"), ttk.Entry):
+            # e.g. DatePicker: .entry is the underlying entry widget
+            value = widget.entry.get().strip()
+        elif isinstance(widget, tk.StringVar):
+            value = widget.get()
+        elif isinstance(widget, ttk.Entry):
+            value = widget.get()
+        elif isinstance(widget, ttk.Combobox):
+            value = widget.get()
+        else:
+            # fallback: whatever the widget is (e.g., radiobutton group stringvar earlier)
+            try:
+                value = widget.get()
+            except Exception:
+                value = widget
+
+        # store values into data
+        data[key] = None
+        try:
+            if value != placeholder[key]:
+                data[key] = value
+        except KeyError:
+            data[key] = value
+
+    if course_validate_data(data):
+        if func(
+            cID=data['ID'],
+            name=data['Course Name'],
+            doc_name=data['Doctor Name'],
+            price=data['Price'],
+            s_date=data['Start Date'],
+            e_date=data['End Date']
+            ):
+                return True
+    return False
+
+def delete_course(window, data):
+    # show confirmation pop_up
+    message = "Are you sure you want to delete this course?"
+    confirmation_text = "Delete"
+    result = PopupHandler.confirmation_popup(window, title="Delete Course", message=message, button1_text="Cancel", button2_text=confirmation_text)
+    if result:
+        if delete.delete(database, 'courses', [data['ID']]):
             return True
     return False
