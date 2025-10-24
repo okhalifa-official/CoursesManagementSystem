@@ -1,22 +1,19 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-from tkcalendar import DateEntry
-from PIL import Image, ImageTk
+from tkinter import ttk
+from tkcalendar import DateEntry # type: ignore
+from PIL import Image, ImageTk # type: ignore
 import os,sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Router'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '../Controller'))
 from DataModel import Course
-import DataArchitecture as DataArch
 import Router.route as _r
-from Query import select, insert, delete
-import DB
 from Controller import DataController,PopupHandler
 from datetime import datetime
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
-import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg # type: ignore
+import matplotlib.pyplot as plt # type: ignore
+import numpy as np # type: ignore
 
 
 class CourseReportView(tk.Toplevel):
@@ -28,13 +25,10 @@ class CourseReportView(tk.Toplevel):
         self.geometry("1000x600")
 
     def load(self):
-        self.entry = {}
-        self.courses_table = None
-        self.payments_table = None
-        self.search_var = tk.StringVar()
-        self.pay_search_var = tk.StringVar()
+        # load course report view
         self.courses_data = []
 
+        # Back Button Handling
         def back_btn_pressed():
             _r.route_back(self)
 
@@ -42,11 +36,12 @@ class CourseReportView(tk.Toplevel):
                     command=back_btn_pressed)
         back_btn.pack(side="top", anchor="w", pady=10, padx=10)
 
+
+        # Initialize Visuals Frame
         self.visuals_frame = ttk.Frame(self)
         self.visuals_frame.pack(fill="both", pady=0, padx=25)
 
-
-        # ==========================   VISUAL REPORT VIEW
+        # ==========================   REPORT VIEW
 
         # insert enrolled courses records
         def reload_visuals_data():
@@ -54,44 +49,29 @@ class CourseReportView(tk.Toplevel):
         
         reload_visuals_data()
         self.visualize()
-
-        # export_btn = ttk.Button(courses_table_frame, text='Export')
-        # export_btn.pack(side="right", padx=(10,10), pady=(0,5))
         
 
     def reload_data(self):
-        columns = [
-            "c.course_name AS 'Course Name'",
-            "'Dr.' || d.first_name || ' ' || d.last_name AS 'Doctor Name'",
-            "c.course_price AS 'Price'",
-            "c.course_start_date AS 'Start Date'",
-            "c.course_end_date AS 'End Date'",
-            "COUNT(DISTINCT c.student_id) AS 'No Enrolled Students'", 
-            "SUM(IFNULL(p.amount_paid, 0)) || ' EGP' AS 'Total Amount Paid'", 
-            "((c.course_price*COUNT(DISTINCT c.student_id)) - SUM(IFNULL(p.amount_paid, 0))) || ' EGP' AS 'Total Remaining'", 
-            "(c.course_price*COUNT(DISTINCT c.student_id)) || ' EGP' AS 'Total Expected'"
-        ]
-        where = [
-                 '1'
-                ]
-        group_by = ['c.course_id']
-        all_rows = DataController.load_data_with_args(From=['student_course c LEFT JOIN payments p ON p.student_course_id = c.id JOIN doctors d on d.id = c.doctor_id'], Where=where, Value=['1'], Operations=[' = '], Columns=columns, group=group_by)
+        # Load courses data with financials
+        all_rows = DataController.load_table('courses_report')
         self.courses_data = []
         
         for r in all_rows:
+            # Unpack row data
             rec = {}
             rec['Course Name'], rec['Doctor Name'], rec['Course Price'], rec['Start Date'], rec['End Date'], rec['No Enrolled Students'],rec['Total Amount Paid'],rec['Total Remaining'],rec['Total Expected'] = r
             self.courses_data.append(rec)
 
-        # print(self.courses_data)
 
     def visualize(self):
+        # ==========================   VISUALIZATIONS (REPORTS & CHARTS)
         # Clean Data
         courses = np.array([d['Course Name'] for d in self.courses_data])
         enrolled = np.array([d['No Enrolled Students'] for d in self.courses_data])
         paid = np.array([int(d['Total Amount Paid'].split()[0]) for d in self.courses_data])
         remaining = np.array([int(d['Total Remaining'].split()[0]) for d in self.courses_data])
         expected = np.array([int(d['Total Expected'].split()[0]) for d in self.courses_data])
+
         # Derived metrics
         paid_ratio = np.round((paid / expected) * 100, 1)  # percentage paid
         avg_paid = np.mean(paid)
@@ -109,40 +89,27 @@ class CourseReportView(tk.Toplevel):
         notebook = ttk.Notebook(self.visuals_frame)
         notebook.pack(fill="both", expand=True)
 
-        
 
         # ==========================
-        # Chart 8: Students with Remaining Balance
+        # Chart 1: Students with Remaining Balance
         # ==========================
-        tab8 = ttk.Frame(notebook)
-        notebook.add(tab8, text="Students Remaining")
+        tab1 = ttk.Frame(notebook)
+        notebook.add(tab1, text="Students Remaining")
 
-        search_frame = ttk.Frame(tab8)
+        search_frame = ttk.Frame(tab1)
         search_frame.pack(fill="x", pady=10, padx=15)
 
+        # Search button and entry
         search_var = tk.StringVar()
-        search_entry = ttk.Entry(search_frame, textvariable=search_var, width=40)
         
-
-        def reload_table():
-            query = search_var.get().strip().lower()
-            for row in tree.get_children():
-                tree.delete(row)
-
-            data = load_students_with_remaining()
-
-            for r in data:
-                if any(query.lower() in str(cell).lower() for cell in r):
-                    formatted = (r[0], r[1], r[2], f"{float(r[3]):,.2f} EGP")
-                    tree.insert("", "end", values=formatted)
-
-        search_btn = ttk.Button(search_frame, text="Search", command=reload_table)
-
+        search_btn = ttk.Button(search_frame, text="Search")
         search_btn.pack(side="right", padx=(10, 10))
+        
+        search_entry = ttk.Entry(search_frame, textvariable=search_var, width=40)
         search_entry.pack(side="right", padx=(0, 5))
 
         # Table frame
-        table_frame = ttk.Frame(tab8)
+        table_frame = ttk.Frame(tab1)
         table_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Scrollbars
@@ -173,32 +140,29 @@ class CourseReportView(tk.Toplevel):
 
         tree.pack(fill="both", expand=True)
 
-        # Load only students with remaining amount > 0
-        def load_students_with_remaining():
-            query_columns = [
-                "s.first_name || ' ' || s.last_name AS 'Student Name'",
-                "s.barcode AS 'Barcode'",
-                "c.course_name AS 'Course Name'",
-                "(c.course_price - IFNULL(SUM(p.amount_paid), 0)) AS 'Remaining Amount'"
-            ]
-            tables = [
-                "student_course c "
-                "JOIN students s ON s.id = c.student_id "
-                "LEFT JOIN payments p ON p.student_course_id = c.id"
-            ]
-            where = ["1"]
-            group_by = ["s.id", "c.course_id"]
-            rows = DataController.load_data_with_args(
-                From=tables, Where=where, Value=["1"], Operations=[" = "],
-                Columns=query_columns, group=group_by
-            )
+        # Reload table data based on search
+        def reload_table():
+            query = search_var.get().strip().lower()
+            # Clear existing rows
+            for row in tree.get_children():
+                tree.delete(row)
 
+            # Load only students with remaining amount > 0
+            rows = DataController.load_table('students_with_remaining')
             # Filter only those with remaining > 0
-            filtered = [r for r in rows if float(r[3]) > 0]
-            return filtered
+            data = [r for r in rows if float(r[3]) > 0]
+
+            # Insert matching rows
+            for r in data:
+                if any(query.lower() in str(cell).lower() for cell in r):
+                    # Format amount neatly with "EGP"
+                    formatted = (r[0], r[1], r[2], f"{float(r[3]):,.2f} EGP")
+                    tree.insert("", "end", values=formatted)
+        
+        search_btn.config(command=lambda: reload_table())
 
         # Populate table
-        remaining_rows = load_students_with_remaining()
+        remaining_rows = DataController.load_table('students_with_remaining')
         for r in remaining_rows:
             # Format amount neatly with "EGP"
             formatted = (r[0], r[1], r[2], f"{float(r[3]):,.2f} EGP")
@@ -207,31 +171,31 @@ class CourseReportView(tk.Toplevel):
         reload_table()
 
         # ==========================
-        # Chart 7:
+        # Chart 2: Detailed Analysis
         # ==========================
-        tab7 = ttk.Frame(notebook)
-        notebook.add(tab7, text="Detailed Analysis")
-        self.view_analysis(tab7)
+        tab2 = ttk.Frame(notebook)
+        notebook.add(tab2, text="Detailed Analysis")
+        self.view_analysis(tab2)
 
         # ==========================
-        # Chart 9: Coming Soon!
+        # Coming Soon!
         # ==========================
-        tab9 = ttk.Frame(notebook)
-        notebook.add(tab9, text="Graphical Reports")
+        tabx = ttk.Frame(notebook)
+        notebook.add(tabx, text="Graphical Reports")
 
         # Informative text
         label_coming_soon = ttk.Label(
-            tab9,
+            tabx,
             text="📊 Graphical reports and visual insights will be added soon!",
             font=("Arial", 14, "bold")
         )
         label_coming_soon.pack(expand=True, pady=50)
 
 
-
     def view_analysis(self, master):
         # ==========================   COURSE ANALYSIS VIEW
 
+        # Text box with scrollbar
         scrollbar = ttk.Scrollbar(master)
         scrollbar.pack(side="right", fill="y")
 
@@ -248,6 +212,7 @@ class CourseReportView(tk.Toplevel):
             spacing3=10  # ⬅️ After a paragraph
         )
         text_box.pack(fill="both", expand=True)
+
         scrollbar.config(command=text_box.yview)
 
         # Title
@@ -259,9 +224,9 @@ class CourseReportView(tk.Toplevel):
         total_students, total_paid, total_expected, total_remaining = [], [], [], []
         total_courses = len(self.courses_data)
 
-        for i, course in enumerate(self.courses_data, start=1):
+        for i, course in enumerate(self.courses_data):
             # Extract data safely
-            course_name = course.get("Course Name", f"Course {i}")
+            course_name = course.get("Course Name", f"Course {i+1}")
             doctor_name = course.get("Doctor Name", "Unknown")
             price = float(course.get("Course Price", 0))
             sdate = course.get("Start Date", "N/A")
@@ -317,7 +282,8 @@ class CourseReportView(tk.Toplevel):
                 price_efficiency = np.round(paid / price, 1)
                 analysis_lines.append(f"   💹  Price-to-Collection Ratio: {price_efficiency}× course price.\n")
 
-            analysis_lines.append("\n───────────────────────────────────────────────\n\n")
+            if i<len(self.courses_data)-1:
+                analysis_lines.append("\n───────────────────────────────────────────────\n\n")
 
         # === Overall Statistics ===
         total_paid_sum = sum(total_paid)
@@ -329,7 +295,7 @@ class CourseReportView(tk.Toplevel):
         avg_payment_per_student = np.round(total_paid_sum / total_students_sum, 2) if total_students_sum else 0
 
         analysis_lines.extend([
-            "\n📈  OVERALL SUMMARY\n",
+            "\n\n📈  OVERALL SUMMARY\n",
             "══════════════════════════════════════════════════════\n",
             f"📚  Total Courses Analyzed: {total_courses}\n",
             f"👥  Total Enrolled Students: {total_students_sum}\n",

@@ -445,7 +445,7 @@ def delete_payment(window, paymentID):
             return True
     return False
 
-def load_table(table_name, entry):
+def load_table(table_name, entry={}):
     # Filter and load matching rows
     if table_name == 'payments':
         columns = [
@@ -502,6 +502,38 @@ def load_table(table_name, entry):
                     'c.student_id'
                 ]
         return load_data_with_args(From=['student_course c'], Where=where, Value=[entry['Student ID']], Operations=[' = '], Columns=columns)
+    elif table_name == 'courses_report':
+        columns = [
+            "c.course_name AS 'Course Name'",
+            "'Dr.' || d.first_name || ' ' || d.last_name AS 'Doctor Name'",
+            "c.course_price AS 'Price'",
+            "c.course_start_date AS 'Start Date'",
+            "c.course_end_date AS 'End Date'",
+            "COUNT(DISTINCT c.student_id) AS 'No Enrolled Students'", 
+            "SUM(IFNULL(p.amount_paid, 0)) || ' EGP' AS 'Total Amount Paid'", 
+            "((c.course_price*COUNT(DISTINCT c.student_id)) - SUM(IFNULL(p.amount_paid, 0))) || ' EGP' AS 'Total Remaining'", 
+            "(c.course_price*COUNT(DISTINCT c.student_id)) || ' EGP' AS 'Total Expected'"
+        ]
+        where = [
+                    '1'
+                ]
+        group_by = ['c.course_id']
+        return load_data_with_args(From=['student_course c LEFT JOIN payments p ON p.student_course_id = c.id JOIN doctors d on d.id = c.doctor_id'], Where=where, Value=['1'], Operations=[' = '], Columns=columns, group=group_by)
+    elif table_name == 'students_with_remaining':
+        columns = [
+            "s.first_name || ' ' || s.last_name AS 'Student Name'",
+            "s.barcode AS 'Barcode'",
+            "c.course_name AS 'Course Name'",
+            "(c.course_price - IFNULL(SUM(p.amount_paid), 0)) AS 'Remaining Amount'"
+        ]
+        tables = [
+            "student_course c "
+            "JOIN students s ON s.id = c.student_id "
+            "LEFT JOIN payments p ON p.student_course_id = c.id"
+        ]
+        where = ["1"]
+        group_by = ["s.id", "c.course_id"]
+        return load_data_with_args(From=tables, Where=where, Value=["1"], Operations=[" = "], Columns=columns, group=group_by)
     # elif table_name == 'doctors':
         
 
