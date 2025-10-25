@@ -85,22 +85,59 @@ class StudentPaymentView(tk.Toplevel):
         self.img_preview.pack(side="top")
 
         # Load existing image
+        def open_student_image(path):
+            try:
+                if not path:
+                    return None
+
+                # Common image extensions to try
+                extensions = ['.png', '.jpg', '.jpeg', '.gif']
+
+                # Try exact path first
+                possible_paths = [path]
+
+                # If path has no extension, try all possible ones
+                if not os.path.splitext(path)[1]:
+                    possible_paths += [path + ext for ext in extensions]
+
+                # Try opening each possible path
+                for p in possible_paths:
+                    if os.path.exists(p):
+                        try:
+                            img = Image.open(p)
+                            return p
+                        except Exception:
+                            continue
+
+                print("Error: No valid image found for the given path.")
+                return None
+
+            except Exception as e:
+                print(f"Error loading student image: {e}")
+                return None
+            
         if student._student_data['Image']:
             path = student._student_data['Image']
+            if path and not os.path.isabs(path):
+                path = os.path.join("assets", "student_profile", path)
+                
             # Show image in label
-            img = Image.open(path)
-            # Calculate new size to ensure min width/height 100
-            w, h = img.size
-            scale = max(100/w, 100/h)
-            new_w, new_h = int(w*scale), int(h*scale)
-            img = img.resize((new_w, new_h), Image.LANCZOS)
-            # Center crop to 100x100 if needed
-            if new_w > 100 or new_h > 100:
-                left = (new_w - 100) // 2
-                top = (new_h - 100) // 2
-                img = img.crop((left, top, left+100, top+100))
-            self.img_tk = ImageTk.PhotoImage(img)
-            self.img_preview.config(image=self.img_tk, text="", width=100, height=100)
+            valid_path = open_student_image(path)
+            self.entry['Image'] = valid_path
+            if valid_path is not None:
+                img = Image.open(valid_path)
+                # Calculate new size to ensure min width/height 160
+                w, h = img.size
+                scale = max(160/w, 160/h)
+                new_w, new_h = int(w*scale), int(h*scale)
+                img = img.resize((new_w, new_h), Image.LANCZOS)
+                # Center crop to 160x160 if needed
+                if new_w > 160 or new_h > 160:
+                    left = (new_w - 160) // 2
+                    top = (new_h - 160) // 2
+                    img = img.crop((left, top, left+160, top+160))
+                self.img_tk = ImageTk.PhotoImage(img)
+                self.img_preview.config(image=self.img_tk, text="", width=160, height=160)
         
 
         #--------------- Student Details

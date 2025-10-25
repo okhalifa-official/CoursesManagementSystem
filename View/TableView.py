@@ -52,7 +52,6 @@ class CoursesApp(tk.Tk):
         self.selected_obj = {}
         
     def load(self):
-
         for table_name, col_name in self.table_definitions.items():
             # Add a tab for each table
             tab = ttk.Frame(self.tabs)
@@ -61,9 +60,7 @@ class CoursesApp(tk.Tk):
             # Create frame
             filter_frame = ttk.Frame(tab)
             filter_frame.pack(fill="x", padx=5, pady=5)
-            
-            # if table_name not in self.join_frame:
-            #     self.join_frame[table_name] = 
+
             self.action_btns_frame[table_name] = ttk.Frame(filter_frame)
             self.action_btns_frame[table_name].pack(side="left", fill="x", expand=True, padx=5)
 
@@ -86,6 +83,9 @@ class CoursesApp(tk.Tk):
             self.search_btn[table_name] = ttk.Button(filter_frame, text="Search",
                                     command=lambda t=table_name, sv=self.search_var[table_name]: self.search_table(t, sv.get()))
             self.search_btn[table_name].pack(side="left", padx=5)
+            # Refresh Button
+            refresh_btn = ttk.Button(filter_frame, text='Refresh', command=self.reload)
+            refresh_btn.pack(side='left', padx=5)
 
             # Create Table View
             tree = ttk.Treeview(tab, columns=col_name, show="headings")
@@ -136,6 +136,7 @@ class CoursesApp(tk.Tk):
 
         self.load_all_data()
 
+    
     def on_tab_changed(self, event):
         selected_tab = event.widget.select()
         tab_index = event.widget.index(selected_tab)
@@ -160,13 +161,19 @@ class CoursesApp(tk.Tk):
                 self.payment_btn.pack(side='left', padx=5)
                 self.report_btn[table_name].pack(side="right")
                 self.selected_obj[table_name] = DataModel.Student(row_data[0])
+                if not self.selected_obj[table_name]:
+                    self.payment_btn.pack_forget()
+                    self.report_btn[table_name].pack_forget()
             elif table_name == 'doctors':
                 self.selected_obj[table_name] = DataModel.Doctor(row_data[0])
             elif table_name == 'courses':
                 # self.search_student_entry.pack(side="left", padx=(0,15), fill="x", expand=True)
-                self.attendance_btn.config(command=lambda t='courses': self.attendance_btn_pressed(t))
+                # self.attendance_btn.config(command=lambda t='courses': self.attendance_btn_pressed(t))
                 # self.attendance_btn.pack(side='left')
                 self.selected_obj[table_name] = DataModel.Course(row_data[0])
+            if not self.selected_obj[table_name]:
+                    self.edit_btn[table_name].pack_forget()
+                    self.reload()
         else:
             self.edit_btn[table_name].pack_forget()
             if table_name == 'students':
@@ -196,8 +203,6 @@ class CoursesApp(tk.Tk):
         tree = self.tables[table]
         selected = tree.selection()
         if not selected:
-            print("Warning", " No row selected")
-            #messagebox.showwarning("Warning", "No row selected")
             return
         record_id = tree.item(selected[0])["values"][0]
         delete.delete(DB.db(), table, [record_id])
@@ -207,7 +212,6 @@ class CoursesApp(tk.Tk):
         self.load_all_data()
 
     def search_table(self, table_name, query):
-        # print("query pressed: ",query)
         # Get all rows
         all_rows = DataController.load_data(table_name)
         # Clear table
@@ -218,26 +222,21 @@ class CoursesApp(tk.Tk):
                 self.tables[table_name].insert("", "end", values=r)
     
     def create_btn_pressed(self, table_name):
-        print("create")
         if table_name == 'students':
-            print('student')
             from View.Students.student_add_view import StudentAddView
             new_student_view = StudentAddView(self)
             _r.route(current=self, to=new_student_view)
         elif table_name == 'courses':
-            print('course')
             from View.Courses.course_add_view import CourseAddView
             new_course_view = CourseAddView(self)
             _r.route(current=self, to=new_course_view)
         elif table_name == 'doctors':
-            print('doctor')
             from View.Doctors.doctor_add_view import DoctorAddView
             new_doctor_view = DoctorAddView(self)
             _r.route(current=self, to=new_doctor_view)
 
 
     def edit_btn_pressed(self, table_name):
-        print("edit")
         if table_name == 'students':
             from View.Students.student_edit_view import StudentEditView
             new_student_view = StudentEditView(self,self.selected_obj[table_name])
@@ -253,13 +252,12 @@ class CoursesApp(tk.Tk):
 
 
     def payment_btn_pressed(self, table_name):
-        print("payment")
         from View.Students.student_payment_view import StudentPaymentView
         new_student_view = StudentPaymentView(self,self.selected_obj[table_name])
         _r.route(current=self, to=new_student_view)
 
-    def attendance_btn_pressed(self, table_name):
-        print("attendance pressed")
+    # def attendance_btn_pressed(self, table_name):
+    #     print("attendance pressed")
 
     def report_pressed(self, table_name):
         if table_name == "students":

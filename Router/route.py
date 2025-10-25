@@ -1,8 +1,7 @@
-import route_data, route_controller
+import route_data
 
 def route(current, to):
     route_data.view_stack.append(current)
-    # print(route_data.view_stack)
     current.withdraw()  # Hide current window
     to.load()
     to.view()
@@ -15,4 +14,4 @@ def route_back(current):
         to.deiconify()
         to.view()
     else:
-        print("no back available")
+        return

@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Model', 'Query'))
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk, messagebox
 from Controller.Validation import Validation
 from Controller import PopupHandler
 from DB import db # type: ignore
@@ -25,11 +25,12 @@ def load_data(table_name):
     rows = cursor.fetchall()
     return rows
 
-def load_data_with_args(From, Where, Value, Columns=["*"], Operations=[], group=[]):
+def load_data_with_args(From, Where, Value, Columns=["*"], Operations=[], group=[], Order=[]):
     columns_string = ""
     from_string = ""
     condition_string = ""
     group_string = ""
+    order_string = ""
     for i,col in enumerate(Columns):
         columns_string += col
         if i < len(Columns)-1:
@@ -49,54 +50,32 @@ def load_data_with_args(From, Where, Value, Columns=["*"], Operations=[], group=
         group_string += grp
         if i < len(group)-1:
             group_string += ', '
+    for i,ordr in enumerate(Order):
+        order_string += ordr
+        if i < len(Order)-1:
+            order_string += ', '
 
-    try:
-        query = f"""
-            SELECT {columns_string}
-            FROM {from_string}
-            WHERE {condition_string}
-        """
-        if len(group) > 0:
-            query += f"GROUP BY {group_string}"
-
-        print(query)
-        cursor = database.cursor()
-        cursor.execute(query)
-        result = cursor.fetchall()
-        return result
-    except Exception as error:
-        print(f"Failed loading data: {error}")
+    result = select.select_with_args(database=database,columns=columns_string, froms=from_string, conditions=condition_string, group=group_string, order=order_string)
+    if result is None:
+        print('Error fetching result')
         return None
+    return result
 
 def is_student_enrolled_to(sID, course_name):
-    query = """
-        SELECT 1 FROM student_course
-        WHERE student_id = ? AND course_name = ?
-        LIMIT 1
-    """
-    cursor = database.cursor()
-    cursor.execute(query, (sID, course_name))
-    result = cursor.fetchone()
+    result = load_data_with_args(From=['student_course'],Where=['student_id', 'course_name'], Columns=['1'], Value=[sID,course_name])
     return result is not None
 
 def enroll_student_to_course(sID, course_name):
     # Get course info
-    cursor = database.cursor()
-    cursor.execute("""
-        SELECT id, doctor_id, price, start_date, end_date
-        FROM courses
-        WHERE name = ?
-        LIMIT 1
-    """, (course_name,))
-    course = cursor.fetchone()
-
-    if not course:
+    course = load_data_with_args(From=['courses'],Where=['name'], Columns=['id', 'doctor_id', 'price', 'start_date', 'end_date'], Value=[course_name])
+    if course is not None:
         print(f"Course '{course_name}' not found.")
         return False
 
-    course_id, doctor_id, course_price, course_start_date, course_end_date = course
+    course_id, doctor_id, course_price, course_start_date, course_end_date = course[0]
 
     # Insert into student_course
+    cursor = database.cursor()
     cursor.execute("""
         INSERT INTO student_course (
             student_id, doctor_id, course_name, course_price,
@@ -110,20 +89,17 @@ def enroll_student_to_course(sID, course_name):
     return True
 
 def add_new_payment(sID, course_name, paid, pay_type, date):
-    cursor = database.cursor()
     # Get the student_course id for this student and course
-    cursor.execute("""
-        SELECT id FROM student_course
-        WHERE student_id = ? AND course_name = ?
-        ORDER BY id DESC LIMIT 1
-    """, (sID, course_name))
-    result = cursor.fetchone()
-    if not result:
+    result = load_data_with_args(From=['student_course'],Where=['student_id', 'course_name'], Columns=['id'], Value=[sID, course_name], Order=['id'])
+    if result is not None:
         print("Student is not enrolled in this course.")
         return False
+    
+    result = result[0]
     student_course_id = result[0]
 
     # Insert the payment
+    cursor = database.cursor()
     cursor.execute("""
         INSERT INTO payments (student_id, student_course_id, payment_date, payment_type, amount_paid)
         VALUES (?, ?, ?, ?, ?)
@@ -147,15 +123,11 @@ def confirm_payment(pID, sID, course_name, paid, pay_type, date):
 def update_payment(pID, sID, course_name, paid, pay_type, date):
     cursor = database.cursor()
     # Get the student_course id for this student and course
-    cursor.execute("""
-        SELECT id FROM student_course
-        WHERE student_id = ? AND course_name = ?
-        ORDER BY id DESC LIMIT 1
-    """, (sID, course_name))
-    result = cursor.fetchone()
+    result = load_data_with_args(From=['student_course'],Where=['student_id', 'course_name'], Columns=['id'], Value=[sID, course_name], Order=['id'])
     if not result:
         print("Student is not enrolled in this course.")
         return False
+    result = result[0]
     student_course_id = result[0]
 
     try:
@@ -229,14 +201,8 @@ def update_doctor(dID, fname, lname, gender, country, phone, email):
 
 def get_id_from_name(table_name, fullname):
     f_name,l_name = fullname.split()
-    cursor = database.cursor()
-    query = f"""
-        SELECT id
-        FROM {table_name}
-        WHERE first_name = ? and last_name = ?
-    """
-    cursor.execute(query,(f_name, l_name))
-    result = cursor.fetchone()
+    result = load_data_with_args(From=[table_name],Where=['first_name', 'last_name'], Columns=['id'], Value=[f_name, l_name])
+    result = result[0]
     print(result)
     return result[0]
 
@@ -371,7 +337,7 @@ def func_student(func, entry, data, placeholder):
     # store all new student data in self.data{}
     for key, widget in entry.items():
         # skip image --- just for testing (fix later)
-        if key == 'Student Image':
+        if key == 'Image':
             continue
         # Handle different widget types
         if isinstance(widget, ttk.Entry):

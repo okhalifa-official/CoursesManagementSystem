@@ -2,7 +2,7 @@ import os
 import time
 import sys
 import sqlite3
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 # Get absolute path to the assets folder (relative to project root)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

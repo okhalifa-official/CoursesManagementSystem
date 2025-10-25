@@ -8,6 +8,8 @@ from Model.DataModel import Student
 from Controller import DataController, PopupHandler
 import Model.DataArchitecture as DataArch
 import Router.route as _r
+import shutil
+from glob import glob
 
 class StudentEditView(tk.Toplevel):
     def __init__(self, parent, student: Student):
@@ -52,27 +54,65 @@ class StudentEditView(tk.Toplevel):
         vertical_stack.place(relx=.5, rely=.5, anchor="c")
         
         # Add picture box (image preview + select button)
-        self.entry['Student Image'] = None
+        self.entry['Image'] = None
         self.img_preview = tk.Label(vertical_stack, text="No Image", width=20, height=8, bg="#eee", relief="ridge")
         self.img_preview.pack(pady=5, anchor="center")
 
         # Load existing image
+        def open_student_image(path):
+            try:
+                if not path:
+                    return None
+
+                # Common image extensions to try
+                extensions = ['.png', '.jpg', '.jpeg', '.gif']
+
+                # Try exact path first
+                possible_paths = [path]
+
+                # If path has no extension, try all possible ones
+                if not os.path.splitext(path)[1]:
+                    possible_paths += [path + ext for ext in extensions]
+
+                # Try opening each possible path
+                for p in possible_paths:
+                    if os.path.exists(p):
+                        try:
+                            img = Image.open(p)
+                            return p
+                        except Exception:
+                            continue
+
+                print("Error: No valid image found for the given path.")
+                return None
+
+            except Exception as e:
+                print(f"Error loading student image: {e}")
+                return None
+            
         if student._student_data['Image']:
             path = student._student_data['Image']
+            if path and not os.path.isabs(path):
+                path = os.path.join("assets", "student_profile", path)
+                
             # Show image in label
-            img = Image.open(path)
-            # Calculate new size to ensure min width/height 160
-            w, h = img.size
-            scale = max(160/w, 160/h)
-            new_w, new_h = int(w*scale), int(h*scale)
-            img = img.resize((new_w, new_h), Image.LANCZOS)
-            # Center crop to 160x160 if needed
-            if new_w > 160 or new_h > 160:
-                left = (new_w - 160) // 2
-                top = (new_h - 160) // 2
-                img = img.crop((left, top, left+160, top+160))
-            self.img_tk = ImageTk.PhotoImage(img)
-            self.img_preview.config(image=self.img_tk, text="", width=160, height=160)
+            valid_path = open_student_image(path)
+            self.data['Image'] = valid_path
+            self.entry['Image'] = valid_path
+            if valid_path is not None:
+                img = Image.open(valid_path)
+                # Calculate new size to ensure min width/height 160
+                w, h = img.size
+                scale = max(160/w, 160/h)
+                new_w, new_h = int(w*scale), int(h*scale)
+                img = img.resize((new_w, new_h), Image.LANCZOS)
+                # Center crop to 160x160 if needed
+                if new_w > 160 or new_h > 160:
+                    left = (new_w - 160) // 2
+                    top = (new_h - 160) // 2
+                    img = img.crop((left, top, left+160, top+160))
+                self.img_tk = ImageTk.PhotoImage(img)
+                self.img_preview.config(image=self.img_tk, text="", width=160, height=160)
 
         def select_image():
             path = filedialog.askopenfilename(filetypes=[("Image Files", ["*.png","*.jpg","*.jpeg","*.gif"])])
@@ -164,7 +204,61 @@ class StudentEditView(tk.Toplevel):
 
                         # Store the entry widget in the dictionary
                         self.entry[label_text] = entry_widget
-                        
+        
+        def delete_image():
+            target_folder = "assets/student_profile"
+            try:
+                if target_folder in self.data['Image']:
+                    os.remove(self.data['Image'])
+                    return True
+            except Exception as e:
+                    print(f"Error copying image: {e}")
+                    return False
+
+        def add_image():
+            def name_image():
+                # Create a unique name for the image
+                return self.data['First Name'] + self.data['Last Name'] + self.data['Phone Number'][-5:]
+
+            def copy_image_to_assets(path, custom_name):
+                try:
+                    ext = os.path.splitext(path)[1]
+                    target_folder = "assets/student_profile"
+                    os.makedirs(target_folder, exist_ok=True)
+
+                    # Define new file path
+                    new_filename = f"{custom_name}{ext}"
+                    new_path = os.path.join(target_folder, new_filename)
+
+                    # ✅ Skip copying if source and destination are same
+                    if os.path.abspath(path) == os.path.abspath(new_path):
+                        print("Source and destination are the same file — skipping copy.")
+                        return new_path
+
+                    # ✅ Copy and replace
+                    shutil.copy2(path, new_path)
+                    print(f"Image copied to: {new_path}")
+                    delete_image()
+
+                    return new_path
+
+                except Exception as e:
+                    print(f"Error copying image: {e}")
+                    return False
+
+            if self.data['Image'] is None:
+                return True
+            
+            # Copy the selected image and update data
+            self.data['Image'] = copy_image_to_assets(
+                path=self.entry['Image'],
+                custom_name=name_image()
+            )
+
+            if not self.data['Image']:
+                return False
+            return True
+        
         def on_update_student():
             # on update button press call update_student from data controller
             if DataController.func_student(func=DataController.update_student,
@@ -172,12 +266,14 @@ class StudentEditView(tk.Toplevel):
                 data=self.data, 
                 placeholder=placeholder
             ):
-                back_btn_pressed()
+                if add_image():
+                    back_btn_pressed()
         
         def on_delete_student():
             # on delete button press call delete_student from data controller
             if DataController.delete_student(window=self, student_id=self.data['ID']):
-                back_btn_pressed()
+                if delete_image():
+                    back_btn_pressed()
         
         #--------------- Action Buttons Frame
         btn_frame = ttk.Frame(vertical_stack)
