@@ -9,7 +9,7 @@
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{79483C53-4F5B-4AC2-B706-A33716BD3166}
+AppId={{C753B80B-A2F1-4C98-B73B-EABC726DFE12}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -27,11 +27,11 @@ ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
 LicenseFile=C:\Users\omari\Documents\PythonProjects\CoursesManagementSystem\license.txt
 InfoAfterFile=C:\Users\omari\Documents\PythonProjects\CoursesManagementSystem\info.txt
-; Remove the following line to run in administrative install mode (install for all users).
-PrivilegesRequired=lowest
+; Uncomment the following line to run in non administrative install mode (install for current user only).
+;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=C:\Users\omari\Documents\PythonProjects\CoursesManagementSystem\dist\Installer
-OutputBaseFilename=NileAcademySetup
+OutputBaseFilename=NileAcademy
 SetupIconFile=C:\Users\omari\Documents\PythonProjects\CoursesManagementSystem\assets\app_icon.ico
 SolidCompression=yes
 WizardStyle=modern
@@ -44,7 +44,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "C:\Users\omari\Documents\PythonProjects\CoursesManagementSystem\dist\NileAcademy\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\omari\Documents\PythonProjects\CoursesManagementSystem\dist\NileAcademy\_internal\assets\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\omari\Documents\PythonProjects\CoursesManagementSystem\dist\NileAcademy\_internal\assets\.env"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\omari\Documents\PythonProjects\CoursesManagementSystem\dist\NileAcademy\_internal\assets\database.db"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

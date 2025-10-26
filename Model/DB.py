@@ -6,10 +6,6 @@ from dotenv import load_dotenv # type: ignore
 import tkinter
 from tkinter import messagebox
 
-# Get absolute path to the assets folder (relative to project root)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ASSETS_DIR = os.path.join(BASE_DIR, "assets")
-
 message = ""
 title = ""
 def show_error(message: str, flag=0):
@@ -24,25 +20,30 @@ def show_error(message: str, flag=0):
                 message
         )
 
-# Load the .env file
+APP_NAME = "CoursesManagementSystem"
+USER_DATA_DIR = os.path.join(os.path.expanduser("~"), f".{APP_NAME}")
+
+# Ensure persistent directory exists
+os.makedirs(USER_DATA_DIR, exist_ok=True)
+
+# Load environment file from assets (project structure)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 env_path = os.path.join(ASSETS_DIR, ".env")
-if not os.path.exists(env_path):
-    message = f"⚠️ Database not found (-2)"
-    # show_error(message)
-else:
-    load_dotenv(env_path)
+load_dotenv(env_path)
 
-# Read the DB name from .env
 DB_NAME = os.getenv("DB_NAME") or "database.db"
-if not DB_NAME:
-    message = "⚠️ Database not found (-1)"
-    # show_error(message)
-else:
-    message = f"✅ Loaded Database Successfully (0000)"
-    # show_error(message)
+SOURCE_DB_PATH = os.path.join(ASSETS_DIR, DB_NAME)
+TARGET_DB_PATH = os.path.join(USER_DATA_DIR, DB_NAME)
 
-# Build full database path
-DB_PATH = os.path.join(ASSETS_DIR, DB_NAME)
+# Copy if not exists
+if not os.path.exists(TARGET_DB_PATH):
+    import shutil
+    shutil.copy2(SOURCE_DB_PATH, TARGET_DB_PATH)
+
+# Use the persistent database
+DB_PATH = TARGET_DB_PATH
+# show_error(f"Database Path: {DB_PATH}", 1)
 
 class db:
     def terminate(self):
@@ -74,7 +75,7 @@ class db:
             trials = 10
             while trials > 0:
                 try:
-                    cls._instance = sqlite3.connect(DB_PATH)
+                    cls._instance = sqlite3.connect(os.path.abspath(DB_PATH))
                     message = f"✅ Loaded Database Successfully (0000)"
                     show_error(message,1)
                     break
