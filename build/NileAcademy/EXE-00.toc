@@ -59,7 +59,7 @@
  [],
  False,
  False,
- 1761513238,
+ 1761521272,
  [('runw',
    '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/bootloader/Darwin-64bit/runw',
    'EXECUTABLE')],
