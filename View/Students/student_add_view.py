@@ -183,7 +183,7 @@ class StudentAddView(tk.Toplevel):
                     print(f"Error copying image: {e}")
                     return False
 
-            if self.data['Image'] is None:
+            if self.entry['Image'] is None:
                 return True
             
             # Copy the selected image and update data

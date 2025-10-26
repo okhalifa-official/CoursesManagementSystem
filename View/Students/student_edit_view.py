@@ -259,7 +259,7 @@ class StudentEditView(tk.Toplevel):
                 return True
             
             # Copy the selected image and update data
-            self.data['Image'] = copy_image_to_assets(
+            self.entry['Image'] = copy_image_to_assets(
                 path=self.entry['Image'],
                 custom_name=name_image()
             )

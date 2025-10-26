@@ -5,16 +5,14 @@ Delete the build:
 rm -rf build dist *.spec
 
 Build App:
-pyinstaller --windowed \
-  --name "Courses Management" \
-  --icon "assets/app_icon.icns" \
-  --add-data "assets/.env:assets" \
-  --add-data "assets/database.db:assets" \
-  --add-data "assets/student_profile:assets/student_profile" \
-  main.py
+rm -rf build dist *.dmg
+pyinstaller NileAcademy.spec --clean
+
 
 DMG:
-rm NileAcademy.dmg
+rm -rf dmgbuild
+mkdir dmgbuild
+cp -R "dist/NileAcademy.app" dmgbuild/
 create-dmg \
   --volname "Nile Academy Installer" \
   --window-pos 200 120 \
