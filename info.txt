@@ -1,0 +1,7 @@
+Thank you for installing NileAcademy!
+
+Developed by: Omar Khalifa
+Version: 0.0.0
+Support: omario2k5@gmail.com
+
+We hope NileAcademy helps you manage your courses efficiently.

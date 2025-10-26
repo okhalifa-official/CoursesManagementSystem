@@ -8,6 +8,8 @@ Build App:
 rm -rf build dist *.dmg
 pyinstaller NileAcademy.spec --clean
 
+* for windows
+pyinstaller WinNileAcademy.spec --clean
 
 DMG:
 rm -rf dmgbuild

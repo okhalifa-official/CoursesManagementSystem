@@ -1,0 +1,13 @@
+NileAcademy License Agreement
+-----------------------------
+
+Copyright © 2025 Omar Khalifa. All rights reserved.
+
+By installing or using NileAcademy, you agree to the following terms:
+
+1. This software is provided "as is" without warranty of any kind.
+2. Redistribution or modification without written permission is prohibited.
+3. You may use this software for educational and internal business purposes.
+4. The author is not liable for any damages resulting from the use of this program.
+
+If you do not agree to these terms, please cancel the installation.

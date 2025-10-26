@@ -4,12 +4,12 @@ block_cipher = None
 
 a = Analysis(
     ['main.py'],
-    pathex=[],
+    pathex=['.'],
     binaries=[],
     datas=[
         ('assets/.env', 'assets'),
         ('assets/database.db', 'assets'),
-        ('assets/student_profile', 'assets/student_profile'),
+        ('assets/student_profile', 'assets/student_profile'),  # make sure this folder exists
     ],
     hiddenimports=[],
     hookspath=[],
@@ -36,8 +36,8 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,  # No terminal window (GUI app)
-    icon='assets/app_icon.ico',
+    console=False,  # GUI app (no console)
+    icon='assets/app_icon.ico',  # ✅ app icon
 )
 
 coll = COLLECT(
@@ -48,5 +48,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='NileAcademy'
+    name='NileAcademy',
 )
