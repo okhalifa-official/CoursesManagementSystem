@@ -201,10 +201,10 @@ class CoursesApp(tk.Tk):
             self.load_data(table_name)
 
     def load_data(self, table):
+        # Clear table before fetching results
+        self.clear_table(table)
         rows = DataController.load_data(table)
         if rows:
-            # Clear table before fetching results
-            self.clear_table(table)
             # Fetch results to the table view
             for r in rows:
                 self.tables[table].insert("", "end", values=r)

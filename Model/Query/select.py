@@ -132,6 +132,7 @@ def select_with_args(database, columns, froms, conditions, group, order):
         if len(order) > 0:
             query += f"    ORDER BY {order} DESC\n"
             
+        # print(query)
         cursor = database.cursor()
         cursor.execute(query)
         return cursor.fetchall()

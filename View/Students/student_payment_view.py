@@ -42,7 +42,6 @@ class StudentPaymentView(tk.Toplevel):
 
         # isEditingTransaction flag
         self.isEditingTransaction = False
-        self.paymentID = None
 
         # Initialize courses and payments entity holders
         self.courses_table = None
@@ -457,14 +456,14 @@ class StudentPaymentView(tk.Toplevel):
 
         # Change course name label to combobox for enrolling in new course
         def change_course_to_combobox():
-            show_payment_operation_table()
             hide_delete()
+            show_payment_operation_table()
             
             self.cname.destroy()
             
             # Get unregistered courses for the student
             # ==============================================DATABASE QUERY HERE==============================================
-            unregistered_courses = select.select_unregistered_courses(DB.db(), student._student_data[student._student_columns[0]]).fetchall()
+            unregistered_courses = DataController.select_unregistered_courses(student._student_data[student._student_columns[0]])
             
             # Format course names with prices e.g., "Course A - 4000 EGP"
             unregistered_course_names = [c[0]+" - "+str(c[1])+" EGP" for c in unregistered_courses]
@@ -521,7 +520,7 @@ class StudentPaymentView(tk.Toplevel):
         def on_confirm_payment(action="confirm"):
             # Set entry data from widgets
             set_entry_data()
-
+            self.entry['Payment ID'] = self.paymentID
             # Confirm or update payment
             if action == "confirm":
                 if not DataController.func_payment(func=DataController.confirm_payment,entry=self.entry):

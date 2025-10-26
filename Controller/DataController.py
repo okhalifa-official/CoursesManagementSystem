@@ -62,13 +62,25 @@ def load_data_with_args(From, Where, Value, Columns=["*"], Operations=[], group=
     return result
 
 def is_student_enrolled_to(sID, course_name):
-    result = load_data_with_args(From=['student_course'],Where=['student_id', 'course_name'], Columns=['1'], Value=[sID,course_name])
-    return result is not None
+    # Ask for the id column; check truthiness of result (non-empty list == enrolled)
+    result = load_data_with_args(
+        From=['student_course'],
+        Where=['student_id', 'course_name'],
+        Columns=['id'],
+        Value=[sID, f'"{course_name}"']
+    )
+    return bool(result)  # True if list contains at least one row
 
 def enroll_student_to_course(sID, course_name):
     # Get course info
-    course = load_data_with_args(From=['courses'],Where=['name'], Columns=['id', 'doctor_id', 'price', 'start_date', 'end_date'], Value=[course_name])
-    if course is not None:
+    course = load_data_with_args(
+        From=['courses'],
+        Where=['name'],
+        Columns=['id', 'doctor_id', 'price', 'start_date', 'end_date'],
+        Value=[f'"{course_name}"']
+    )
+
+    if course is None or len(course) == 0:
         print(f"Course '{course_name}' not found.")
         return False
 
@@ -88,15 +100,22 @@ def enroll_student_to_course(sID, course_name):
     database.commit()
     return True
 
+
 def add_new_payment(sID, course_name, paid, pay_type, date):
     # Get the student_course id for this student and course
-    result = load_data_with_args(From=['student_course'],Where=['student_id', 'course_name'], Columns=['id'], Value=[sID, course_name], Order=['id'])
-    if result is not None:
+    result = load_data_with_args(
+        From=['student_course'],
+        Where=['student_id', 'course_name'],
+        Columns=['id'],
+        Value=[sID, f'"{course_name}"']
+    )
+
+    # ⚠️ Check if result is empty or None
+    if not result or len(result) == 0:
         print("Student is not enrolled in this course.")
         return False
-    
-    result = result[0]
-    student_course_id = result[0]
+
+    student_course_id = result[0][0]
 
     # Insert the payment
     cursor = database.cursor()
@@ -104,31 +123,47 @@ def add_new_payment(sID, course_name, paid, pay_type, date):
         INSERT INTO payments (student_id, student_course_id, payment_date, payment_type, amount_paid)
         VALUES (?, ?, ?, ?, ?)
     """, (sID, student_course_id, date, pay_type, paid))
+    
     database.commit()
     return True
 
-def confirm_payment(pID, sID, course_name, paid, pay_type, date):
-    # check if is already enrolled
-    if not is_student_enrolled_to(sID, course_name):
-        # enroll student to course
-        if enroll_student_to_course(sID, course_name):
-            print("enrolled successfully!")
-        else:
-            print("error enrolling student to course!")
-            return
 
-    # pay amount to student_course table
-    add_new_payment(sID, course_name, paid, pay_type, date)
+def confirm_payment(pID, sID, course_name, paid, pay_type, date):
+    # check if student is already enrolled
+    if not is_student_enrolled_to(sID, course_name):
+        # try to enroll student
+        enrolled = enroll_student_to_course(sID, course_name)
+        if not enrolled:
+            print("Error: could not enroll student to course. Payment aborted.")
+            return False
+        print("Enrolled successfully!")
+
+    # Now add the payment
+    paid_ok = add_new_payment(sID, course_name, paid, pay_type, date)
+    if not paid_ok:
+        print("Error: failed to record payment.")
+        return False
+
+    print("Payment confirmed.")
+    return True
 
 def update_payment(pID, sID, course_name, paid, pay_type, date):
     cursor = database.cursor()
+
     # Get the student_course id for this student and course
-    result = load_data_with_args(From=['student_course'],Where=['student_id', 'course_name'], Columns=['id'], Value=[sID, course_name], Order=['id'])
+    result = load_data_with_args(
+        From=['student_course'],
+        Where=['student_id', 'course_name'],
+        Columns=['id'],
+        Value=[sID, f'"{course_name}"'],
+        Order=['id']
+    )
+
     if not result:
         print("Student is not enrolled in this course.")
         return False
-    result = result[0]
-    student_course_id = result[0]
+
+    student_course_id = result[0][0]
 
     try:
         cursor.execute("""
@@ -136,11 +171,19 @@ def update_payment(pID, sID, course_name, paid, pay_type, date):
             SET student_id = ?, student_course_id = ?, payment_date = ?, payment_type = ?, amount_paid = ?
             WHERE id = ?
         """, (sID, student_course_id, date, pay_type, paid, pID))
+
+        if cursor.rowcount == 0:
+            print(f"No payment found with ID {pID}.")
+            return False
+
         database.commit()
+        print("Payment updated successfully.")
         return True
+
     except Exception as error:
         print(f"Failed updating payment: {error}")
         return False
+
 
 def add_new_student(id, fname, lname, gender, country, phone, address=None, email=None, university=None, barcode=None):
     cursor = database.cursor()
@@ -201,7 +244,7 @@ def update_doctor(dID, fname, lname, gender, country, phone, email):
 
 def get_id_from_name(table_name, fullname):
     f_name,l_name = fullname.split()
-    result = load_data_with_args(From=[table_name],Where=['first_name', 'last_name'], Columns=['id'], Value=[f_name, l_name])
+    result = load_data_with_args(From=[table_name],Where=['first_name', 'last_name'], Columns=['id'], Value=[f'"{f_name}"', f'"{l_name}"'])
     result = result[0]
     print(result)
     return result[0]
@@ -645,3 +688,7 @@ def delete_course(window, data):
         if delete.delete(database, 'courses', [data['ID']]):
             return True
     return False
+
+
+def select_unregistered_courses(s_id):
+    return select.select_unregistered_courses(database, s_id).fetchall()
